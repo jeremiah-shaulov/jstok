@@ -169,17 +169,27 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 		}
 
 		// ' or " string?
-		if ((c==C_APOS || c==C_QUOT) && value.length>1)
-		{	yield {nLine, nColumn, level, type: TokenType.STRING, value};
-			regExpExpected = false;
-			// advance nColumn and nLine
-			for (let i=0, iEnd=value.length; i<iEnd; i++)
-			{	const c = value.charCodeAt(i);
-				if (c == C_TAB)
-				{	nColumn += tabWidth - (nColumn-1)%tabWidth;
+		if (c==C_APOS || c==C_QUOT)
+		{	if (value.length == 1)
+			{	// ' or " char, that doesn't comprise string
+				const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+				if (!ignore)
+				{	return;
 				}
-				else if (!(c>=0xDC00 && c<=0xDFFF)) // if not a second byte of a surrogate pair
-				{	nColumn++;
+				nColumn++;
+			}
+			else
+			{	yield {nLine, nColumn, level, type: TokenType.STRING, value};
+				regExpExpected = false;
+				// advance nColumn and nLine
+				for (let i=0, iEnd=value.length; i<iEnd; i++)
+				{	const c = value.charCodeAt(i);
+					if (c == C_TAB)
+					{	nColumn += tabWidth - (nColumn-1)%tabWidth;
+					}
+					else if (!(c>=0xDC00 && c<=0xDFFF)) // if not a second byte of a surrogate pair
+					{	nColumn++;
+					}
 				}
 			}
 			continue;
@@ -196,6 +206,13 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					{	// complete `string` without embedded parameters
 						yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE, value};
 						regExpExpected = false;
+					}
+					else if (re.lastIndex == source.length)
+					{	// ` string not terminated
+						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						if (!ignore)
+						{	return;
+						}
 					}
 					else
 					{	yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE_BEGIN, value};
@@ -269,6 +286,13 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 							const {lastIndex} = re;
 							re = tplLevel==0 ? RE_TOKENIZER : RE_TOKENIZER_INSIDE_TEMPLATE;
 							re.lastIndex = lastIndex;
+						}
+						else if (re.lastIndex == source.length)
+						{	// ` string not terminated
+							const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+							if (!ignore)
+							{	return;
+							}
 						}
 						else
 						{	yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE_MID, value};

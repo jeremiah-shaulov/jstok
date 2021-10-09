@@ -523,6 +523,66 @@ Deno.test
 				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, value: "\x7F"},
 			]
 		);
+
+		source = '"\t>\n"';
+		tokens = [...jstok(source)];
+		assertEquals
+		(	tokens,
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
+			]
+		);
+
+		{	source = '"\t>\n"';
+			tokens = [];
+			const ignored = [];
+			const it = jstok(source);
+			let token;
+L:			while ((token = it.next().value))
+			{	while (token.type == TokenType.ERROR)
+				{	ignored.push(token);
+					token = it.next(true).value;
+					if (!token)
+					{	break L;
+					}
+				}
+
+				tokens.push(token);
+			}
+			assertEquals
+			(	tokens,
+				[	{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, value: "\t"},
+					{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, value: ">"},
+					{nLine: 1, nColumn: 6, level: 0, type: TokenType.WHITESPACE, value: "\n"},
+					{nLine: 2, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, value: '"'},
+				]
+			);
+			assertEquals
+			(	ignored,
+				[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
+					{nLine: 2, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
+				]
+			);
+		}
+
+		source = '`\t>';
+		tokens = [...jstok(source)];
+		assertEquals
+		(	tokens,
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, value: "`\t>"},
+				{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: "`\t>"},
+			]
+		);
+
+		source = '`${1}>';
+		tokens = [...jstok(source)];
+		assertEquals
+		(	tokens,
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`${"},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.NUMBER, value: "1"},
+				{nLine: 1, nColumn: 5, level: 1, type: TokenType.MORE_REQUEST, value: "}>"},
+				{nLine: 1, nColumn: 5, level: 0, type: TokenType.ERROR, value: "}>"},
+			]
+		);
 	}
 );
 
