@@ -763,5 +763,9 @@ Deno.test
 		token = [...jstok('` String ${0}`\n')][0];
 		assertEquals(token.getValue(), ' String ');
 		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('` String `\n')][1]; // MORE_REQUEST
+		assertEquals(token.getValue(), '');
+		assertEquals(token.getNumberValue(), NaN);
 	}
 );

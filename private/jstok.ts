@@ -247,16 +247,16 @@ export class Token
 									case C_SIX:
 									case C_SEVEN:
 									{	c -= C_ZERO;
-										const iEnd2 = Math.min(iEnd, i+2);
-										while (i < iEnd2)
-										{	const c0 = text.charCodeAt(++i);
+										const iEnd2 = Math.min(iEnd, i+3);
+										while (++i < iEnd2)
+										{	const c0 = text.charCodeAt(i);
 											if (c0<C_ZERO || c0>C_SEVEN)
-											{	i--;
-												break;
+											{	break;
 											}
 											c <<= 3;
 											c |= c0 - C_ZERO;
 										}
+										i--;
 									}
 								}
 							}
