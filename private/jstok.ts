@@ -123,11 +123,11 @@ export const enum TokenType
 }
 
 /**	Represents a JavaScript token.
-	`text` - original JavaScript token text.
-	`type` - token type.
-	`nLine` number of line where this token starts.
-	`nColumn` - number of column on the line where this token starts.
-	`level` - nesting level. Entering `(`, `[` and `{` increments the level. Also the level is incremented when entering parameters in string templates.
+	`text` - Original JavaScript token text.
+	`type` - Token type.
+	`nLine` Line number where this token starts.
+	`nColumn` - Column number on the line where this token starts.
+	`level` - Nesting level. Entering `(`, `[` and `{` increments the level counter. Also the level is incremented when entering `${` parameters in string templates.
  **/
 export class Token
 {	constructor
@@ -140,14 +140,13 @@ export class Token
 	{
 	}
 
-	/**	Returns original JavaScript token.
-		For `TokenType.MORE_REQUEST` returns empty string.
+	/**	Returns original JavaScript token (`this.text`), except for `TokenType.MORE_REQUEST`, for which it returns empty string.
 	 **/
 	toString()
 	{	return this.type==TokenType.MORE_REQUEST ? '' : this.text;
 	}
 
-	/**	Get token string value.
+	/**	Converts JavaScript token to it's JavaScript value, if it's string.
 		For `TokenType.COMMENT` - it's the text after `//` or between `/*` and `*` `/`.
 		For `TokenType.STRING` and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
 		For `TokenType.MORE_REQUEST` - empty string.

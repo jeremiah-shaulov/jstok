@@ -5,7 +5,7 @@ Allows to iterate over tokens in code (code units).
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.0.1/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.0/mod.ts';
 import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
 const source =
@@ -14,23 +14,23 @@ const source =
 `;
 
 assertEquals
-(	[...jstok(source)],
-	[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-		{nLine: 1, nColumn: 5, level: 0, type: TokenType.COMMENT, value: "// Comment"},
-		{nLine: 1, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: "\n\t"},
-		{nLine: 2, nColumn: 5, level: 0, type: TokenType.IDENT, value: "console"},
-		{nLine: 2, nColumn: 12, level: 0, type: TokenType.OTHER, value: "."},
-		{nLine: 2, nColumn: 13, level: 0, type: TokenType.IDENT, value: "log"},
-		{nLine: 2, nColumn: 16, level: 0, type: TokenType.OTHER, value: "("},
-		{nLine: 2, nColumn: 17, level: 1, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`Current time: ${"},
-		{nLine: 2, nColumn: 34, level: 2, type: TokenType.IDENT, value: "new"},
-		{nLine: 2, nColumn: 37, level: 2, type: TokenType.WHITESPACE, value: " "},
-		{nLine: 2, nColumn: 38, level: 2, type: TokenType.IDENT, value: "Date"},
-		{nLine: 2, nColumn: 42, level: 1, type: TokenType.STRING_TEMPLATE_END, value: "}`"},
-		{nLine: 2, nColumn: 44, level: 0, type: TokenType.OTHER, value: ")"},
-		{nLine: 2, nColumn: 45, level: 0, type: TokenType.OTHER, value: ";"},
-		{nLine: 2, nColumn: 46, level: 0, type: TokenType.MORE_REQUEST, value: "\n"},
-		{nLine: 2, nColumn: 46, level: 0, type: TokenType.WHITESPACE, value: "\n"},
+(	[...jstok(source)].map(v => Object.assign({}, v)),
+	[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+		{nLine: 1, nColumn: 5, level: 0, type: TokenType.COMMENT, text: "// Comment"},
+		{nLine: 1, nColumn: 15, level: 0, type: TokenType.WHITESPACE, text: "\n\t"},
+		{nLine: 2, nColumn: 5, level: 0, type: TokenType.IDENT, text: "console"},
+		{nLine: 2, nColumn: 12, level: 0, type: TokenType.OTHER, text: "."},
+		{nLine: 2, nColumn: 13, level: 0, type: TokenType.IDENT, text: "log"},
+		{nLine: 2, nColumn: 16, level: 0, type: TokenType.OTHER, text: "("},
+		{nLine: 2, nColumn: 17, level: 1, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`Current time: ${"},
+		{nLine: 2, nColumn: 34, level: 2, type: TokenType.IDENT, text: "new"},
+		{nLine: 2, nColumn: 37, level: 2, type: TokenType.WHITESPACE, text: " "},
+		{nLine: 2, nColumn: 38, level: 2, type: TokenType.IDENT, text: "Date"},
+		{nLine: 2, nColumn: 42, level: 1, type: TokenType.STRING_TEMPLATE_END, text: "}`"},
+		{nLine: 2, nColumn: 44, level: 0, type: TokenType.OTHER, text: ")"},
+		{nLine: 2, nColumn: 45, level: 0, type: TokenType.OTHER, text: ";"},
+		{nLine: 2, nColumn: 46, level: 0, type: TokenType.MORE_REQUEST, text: "\n"},
+		{nLine: 2, nColumn: 46, level: 0, type: TokenType.WHITESPACE, text: "\n"},
 	]
 );
 
@@ -48,13 +48,13 @@ This function returns iterator over JavaScript or TypeScript tokens found in a s
 ```ts
 function jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|boolean|undefined>;
 
-type Token =
-{	nLine: number;
-	nColumn: number;
-	level: number,
+class Token
+{	text: string;
 	type: TokenType;
-	value: string;
-};
+	nLine: number;
+	nColumn: number;
+	level: number;
+}
 
 const enum TokenType
 {	WHITESPACE,
@@ -81,7 +81,7 @@ You can ignore it, or you can react by calling the following `it.next(more)` fun
 In this case this code will be appended to the last token, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.0.1/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.0/mod.ts';
 
 let source =
 `	// Comment
@@ -113,7 +113,7 @@ Though in 3 cases it returns `TokenType.ERROR`: 1) if invalid character occured;
 If you react to `TokenType.ERROR` by calling `it.next(ignore)` with `true` argument, the error will be ignored, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.0.1/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.0/mod.ts';
 
 const source =
 `	// Comment
@@ -139,20 +139,36 @@ L:while ((token = it.next().value))
 ## Token
 
 ```ts
-type Token =
-{	nLine: number;
-	nColumn: number;
-	level: number,
-	type: TokenType;
-	value: string;
-};
+class Token
+{	constructor
+	(	public text: string,
+		public type: TokenType,
+		public nLine = 1,
+		public nColumn = 1,
+		public level = 0,
+	);
+
+	toString(): string;
+	getValue(): string;
+	getNumberValue(): number | bigint;
+}
 ```
 
-- `nLine` - Line number where this token occured.
-- `nColumn` - Column number where this token occured.
-- `level` - Nesting level. Each one of `(`, `[` and `{` increments the `level` counter. Also `${` inside string templates increments it.
+- `text` - original JavaScript token text.
 - `type` - Token type.
-- `value` - Token text.
+- `nLine` - Line number where this token starts.
+- `nColumn` - Column number on the line where this token starts.
+- `level` - Nesting level. Entering `(`, `[` and `{` increments the level counter. Also the level is incremented when entering `${` parameters in string templates.
+
+`toString()` method returns original JavaScript token (`this.text`), except for `TokenType.MORE_REQUEST`, for which it returns empty string.
+
+`getValue()` method converts JavaScript token to it's JavaScript value, if it's string.
+- For `TokenType.COMMENT` - it's the text after `//` or between `/*` and `*/`.
+- For `TokenType.STRING` and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
+- For `TokenType.MORE_REQUEST` - empty string.
+- For others, including `TokenType.NUMBER` - it's the original JavaScript token.
+
+`getNumberValue()` method returns `Number` or `BigInt` value of the token for `TokenType.NUMBER` tokens. For others returns `NaN`.
 
 ## TokenType
 
@@ -204,7 +220,7 @@ It will start counting lines and chars from the provided `nLine` and `nColumn` v
 If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
 
 ```ts
-import {jstokReader} from 'https://deno.land/x/jstok@v0.0.1/mod.ts';
+import {jstokReader} from 'https://deno.land/x/jstok@v0.1.0/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try
