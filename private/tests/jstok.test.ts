@@ -121,7 +121,7 @@ Deno.test
 		{	for (let chunkSize=1; chunkSize<90; chunkSize++)
 			{	const comment = encoding=='windows-1252' ? `/*A B\nC*/` : `/*Aф៘\n😀*/`;
 				const string = encoding=='windows-1252' ? '"A"' : '"😀"';
-				const source = new StringReader(`${comment}Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; ${string};`, chunkSize, encoding);
+				const source = new StringReader(`${comment}Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; ${string};`, chunkSize, encoding);
 				const tokens = [];
 				for await (const token of jstokReader(source, 4, 1, 1, new TextDecoder(encoding)))
 				{	tokens.push(token);
@@ -155,8 +155,11 @@ Deno.test
 						{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, value: "/\t/"},
 						{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, value: ";"},
 						{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: string},
-						{nLine: 4, nColumn: 19, level: 0, type: TokenType.OTHER, value: ";"},
+						{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: '"L1\\\n\tL2"'},
+						{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, value: ";"},
+						{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: " "},
+						{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, value: string},
+						{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, value: ";"},
 					]
 				);
 			}
