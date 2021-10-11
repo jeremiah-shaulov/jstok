@@ -72,7 +72,7 @@ function normalizeIndent(str: string, newIndent='')
 Deno.test
 (	'Line numbers',
 	() =>
-	{	const source = `/*Aф៘\n😀*/Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "😀";`;
+	{	const source = `/*Aф៘\n😀*/Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; "😀";`;
 		const tokens = [...jstok(source)];
 		assertEquals
 		(	tokens,
@@ -103,9 +103,12 @@ Deno.test
 				{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, value: "/\t/"},
 				{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, value: ";"},
 				{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: '"😀"'},
-				{nLine: 4, nColumn: 19, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 4, nColumn: 19, level: 0, type: TokenType.OTHER, value: ";"},
+				{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: '"L1\\\n\tL2"'},
+				{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, value: ";"},
+				{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: " "},
+				{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, value: '"😀"'},
+				{nLine: 5, nColumn: 13, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
+				{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, value: ";"},
 			]
 		);
 	}

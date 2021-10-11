@@ -160,48 +160,40 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 			continue;
 		}
 
-		// unary maybe postfix operator? (don't affect "regExpExpected")
-		if ((c==C_PLUS || c==C_MINUS) && value.length==2)
-		{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
-			// advance nColumn and nLine
-			nColumn += value.length;
-			continue;
-		}
-
-		// ' or " string?
-		if (c==C_APOS || c==C_QUOT)
-		{	if (value.length == 1)
-			{	// ' or " char, that doesn't comprise string
-				const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
-				if (!ignore)
-				{	return;
-				}
-				nColumn++;
-			}
-			else
-			{	yield {nLine, nColumn, level, type: TokenType.STRING, value};
-				regExpExpected = false;
-				// advance nColumn and nLine
-				for (let i=0, iEnd=value.length; i<iEnd; i++)
-				{	const c = value.charCodeAt(i);
-					if (c == C_TAB)
-					{	nColumn += tabWidth - (nColumn-1)%tabWidth;
-					}
-					else if (!(c>=0xDC00 && c<=0xDFFF)) // if not a second byte of a surrogate pair
-					{	nColumn++;
-					}
-				}
-			}
-			continue;
-		}
-
 		// space?
 		if (isSpace)
 		{	yield {nLine, nColumn, level, type: TokenType.WHITESPACE, value};
 		}
 		else
 		{	switch (c)
-			{	case C_BACKTICK:
+			{	case C_PLUS:
+				case C_MINUS:
+				{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+					if (value.length!=2 || value.charCodeAt(1)!=c) // unary postfix operators don't affect "regExpExpected", and prefix operators are not expected before regexp literal
+					{	regExpExpected = true;
+					}
+					nColumn += value.length;
+					continue;
+				}
+				case C_APOS:
+				case C_QUOT:
+				{	// ' or " string?
+					if (value.length == 1)
+					{	// ' or " char, that doesn't comprise string
+						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						if (!ignore)
+						{	return;
+						}
+						nColumn++;
+						continue;
+					}
+					else
+					{	yield {nLine, nColumn, level, type: TokenType.STRING, value};
+						regExpExpected = false;
+					}
+					break;
+				}
+				case C_BACKTICK:
 				{	if (value.charCodeAt(value.length-1) == C_BACKTICK)
 					{	// complete `string` without embedded parameters
 						yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE, value};
