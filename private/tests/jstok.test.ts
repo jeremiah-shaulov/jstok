@@ -74,41 +74,42 @@ Deno.test
 	() =>
 	{	const source = `/*Aф៘\n😀*/Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; "😀";`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, value: "/*Aф៘\n😀*/"},
-				{nLine: 2, nColumn: 4, level: 0, type: TokenType.IDENT, value: "Abc"},
-				{nLine: 2, nColumn: 7, level: 0, type: TokenType.WHITESPACE, value: "\r\n"},
-				{nLine: 3, nColumn: 1, level: 0, type: TokenType.NUMBER, value: "123"},
-				{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-				{nLine: 3, nColumn: 5, level: 0, type: TokenType.NUMBER, value: "45"},
-				{nLine: 3, nColumn: 7, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-				{nLine: 3, nColumn: 9, level: 0, type: TokenType.NUMBER, value: "6"},
-				{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-				{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER, value: "7"},
-				{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING, value: "'\t8\t9'"},
-				{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER, value: ";"},
-				{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`\t012\t${"},
-				{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING, value: "'345'"},
-				{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID, value: "}6${"},
-				{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER, value: "7"},
-				{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 4, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_END, value: "}`"},
-				{nLine: 4, nColumn: 3, level: 0, type: TokenType.OTHER, value: ";"},
-				{nLine: 4, nColumn: 4, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 4, nColumn: 5, level: 0, type: TokenType.STRING_TEMPLATE, value: "``"},
-				{nLine: 4, nColumn: 7, level: 0, type: TokenType.OTHER, value: ";"},
-				{nLine: 4, nColumn: 8, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, value: "/\t/"},
-				{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, value: ";"},
-				{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: '"L1\\\n\tL2"'},
-				{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, value: ";"},
-				{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, value: '"😀"'},
-				{nLine: 5, nColumn: 13, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, value: ";"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, text: "/*Aф៘\n😀*/"},
+				{nLine: 2, nColumn: 4, level: 0, type: TokenType.IDENT, text: "Abc"},
+				{nLine: 2, nColumn: 7, level: 0, type: TokenType.WHITESPACE, text: "\r\n"},
+				{nLine: 3, nColumn: 1, level: 0, type: TokenType.NUMBER, text: "123"},
+				{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+				{nLine: 3, nColumn: 5, level: 0, type: TokenType.NUMBER, text: "45"},
+				{nLine: 3, nColumn: 7, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+				{nLine: 3, nColumn: 9, level: 0, type: TokenType.NUMBER, text: "6"},
+				{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+				{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER, text: "7"},
+				{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING, text: "'\t8\t9'"},
+				{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER, text: ";"},
+				{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t012\t${"},
+				{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING, text: "'345'"},
+				{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID, text: "}6${"},
+				{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER, text: "7"},
+				{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 4, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_END, text: "}`"},
+				{nLine: 4, nColumn: 3, level: 0, type: TokenType.OTHER, text: ";"},
+				{nLine: 4, nColumn: 4, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 4, nColumn: 5, level: 0, type: TokenType.STRING_TEMPLATE, text: "``"},
+				{nLine: 4, nColumn: 7, level: 0, type: TokenType.OTHER, text: ";"},
+				{nLine: 4, nColumn: 8, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, text: "/\t/"},
+				{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, text: ";"},
+				{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, text: '"L1\\\n\tL2"'},
+				{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, text: ";"},
+				{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, text: '"😀"'},
+				{nLine: 5, nColumn: 13, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
+				{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, text: ";"},
 			]
 		);
 	}
@@ -127,39 +128,39 @@ Deno.test
 				{	tokens.push(token);
 				}
 				assertEquals
-				(	tokens,
-					[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, value: comment},
-						{nLine: 2, nColumn: 4, level: 0, type: TokenType.IDENT, value: "Abc"},
-						{nLine: 2, nColumn: 7, level: 0, type: TokenType.WHITESPACE, value: "\r\n"},
-						{nLine: 3, nColumn: 1, level: 0, type: TokenType.NUMBER, value: "123"},
-						{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-						{nLine: 3, nColumn: 5, level: 0, type: TokenType.NUMBER, value: "45"},
-						{nLine: 3, nColumn: 7, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-						{nLine: 3, nColumn: 9, level: 0, type: TokenType.NUMBER, value: "6"},
-						{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-						{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER, value: "7"},
-						{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING, value: "'\t8\t9'"},
-						{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER, value: ";"},
-						{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`\t012\t${"},
-						{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING, value: "'345'"},
-						{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID, value: "}6${"},
-						{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER, value: "7"},
-						{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE, value: "\n"},
-						{nLine: 4, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_END, value: "}`"},
-						{nLine: 4, nColumn: 3, level: 0, type: TokenType.OTHER, value: ";"},
-						{nLine: 4, nColumn: 4, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 4, nColumn: 5, level: 0, type: TokenType.STRING_TEMPLATE, value: "``"},
-						{nLine: 4, nColumn: 7, level: 0, type: TokenType.OTHER, value: ";"},
-						{nLine: 4, nColumn: 8, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, value: "/\t/"},
-						{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, value: ";"},
-						{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, value: '"L1\\\n\tL2"'},
-						{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, value: ";"},
-						{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: " "},
-						{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, value: string},
-						{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, value: ";"},
+				(	tokens.map(v => Object.assign({}, v)),
+					[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, text: comment},
+						{nLine: 2, nColumn: 4, level: 0, type: TokenType.IDENT, text: "Abc"},
+						{nLine: 2, nColumn: 7, level: 0, type: TokenType.WHITESPACE, text: "\r\n"},
+						{nLine: 3, nColumn: 1, level: 0, type: TokenType.NUMBER, text: "123"},
+						{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+						{nLine: 3, nColumn: 5, level: 0, type: TokenType.NUMBER, text: "45"},
+						{nLine: 3, nColumn: 7, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+						{nLine: 3, nColumn: 9, level: 0, type: TokenType.NUMBER, text: "6"},
+						{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+						{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER, text: "7"},
+						{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING, text: "'\t8\t9'"},
+						{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER, text: ";"},
+						{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE, text: " "},
+						{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t012\t${"},
+						{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING, text: "'345'"},
+						{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID, text: "}6${"},
+						{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER, text: "7"},
+						{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE, text: "\n"},
+						{nLine: 4, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_END, text: "}`"},
+						{nLine: 4, nColumn: 3, level: 0, type: TokenType.OTHER, text: ";"},
+						{nLine: 4, nColumn: 4, level: 0, type: TokenType.WHITESPACE, text: " "},
+						{nLine: 4, nColumn: 5, level: 0, type: TokenType.STRING_TEMPLATE, text: "``"},
+						{nLine: 4, nColumn: 7, level: 0, type: TokenType.OTHER, text: ";"},
+						{nLine: 4, nColumn: 8, level: 0, type: TokenType.WHITESPACE, text: " "},
+						{nLine: 4, nColumn: 9, level: 0, type: TokenType.REGEXP, text: "/\t/"},
+						{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER, text: ";"},
+						{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE, text: " "},
+						{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING, text: '"L1\\\n\tL2"'},
+						{nLine: 5, nColumn: 8, level: 0, type: TokenType.OTHER, text: ";"},
+						{nLine: 5, nColumn: 9, level: 0, type: TokenType.WHITESPACE, text: " "},
+						{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING, text: string},
+						{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER, text: ";"},
 					]
 				);
 			}
@@ -176,9 +177,9 @@ Deno.test
 		{	tokens.push(token);
 		}
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, value: "/./"},
-				{nLine: 1, nColumn: 4, level: 0, type: TokenType.OTHER, value: ";"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/./"},
+				{nLine: 1, nColumn: 4, level: 0, type: TokenType.OTHER, text: ";"},
 			]
 		);
 	}
@@ -194,17 +195,18 @@ Deno.test
 			`
 		);
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, value: "#!cat"},
-				{nLine: 1, nColumn: 1, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 2, nColumn: 1, level: 0, type: TokenType.COMMENT, value: "// Hello"},
-				{nLine: 2, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 3, nColumn: 1, level: 0, type: TokenType.IDENT, value: "var"},
-				{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 3, nColumn: 5, level: 0, type: TokenType.IDENT, value: "hello"},
-				{nLine: 3, nColumn: 10, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 3, nColumn: 10, level: 0, type: TokenType.OTHER, value: ";"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, text: "#!cat"},
+				{nLine: 1, nColumn: 1, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 2, nColumn: 1, level: 0, type: TokenType.COMMENT, text: "// Hello"},
+				{nLine: 2, nColumn: 9, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 3, nColumn: 1, level: 0, type: TokenType.IDENT, text: "var"},
+				{nLine: 3, nColumn: 4, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 3, nColumn: 5, level: 0, type: TokenType.IDENT, text: "hello"},
+				{nLine: 3, nColumn: 10, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
+				{nLine: 3, nColumn: 10, level: 0, type: TokenType.OTHER, text: ";"},
 			]
 		);
 	}
@@ -215,9 +217,10 @@ Deno.test
 	() =>
 	{	const source = `#!cat /etc/passwd`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, value: "#!cat /etc/passwd"}
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, text: "#!cat /etc/passwd"}
 			]
 		);
 	}
@@ -228,23 +231,24 @@ Deno.test
 	() =>
 	{	const source = `One  two  _thr_ee  $f_o$ur$_  #$five  @_six$`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, value: "One"},
-				{nLine: 1, nColumn: 4,  level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 6,  level: 0, type: TokenType.IDENT, value: "two"},
-				{nLine: 1, nColumn: 9,  level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 11, level: 0, type: TokenType.IDENT, value: "_thr_ee"},
-				{nLine: 1, nColumn: 18, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 20, level: 0, type: TokenType.IDENT, value: "$f_o$ur$_"},
-				{nLine: 1, nColumn: 29, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 31, level: 0, type: TokenType.IDENT, value: "#$five"},
-				{nLine: 1, nColumn: 37, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 39, level: 0, type: TokenType.MORE_REQUEST, value: "@_six$"},
-				{nLine: 1, nColumn: 39, level: 0, type: TokenType.ATTRIBUTE, value: "@_six$"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, text: "One"},
+				{nLine: 1, nColumn: 4,  level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 6,  level: 0, type: TokenType.IDENT, text: "two"},
+				{nLine: 1, nColumn: 9,  level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 11, level: 0, type: TokenType.IDENT, text: "_thr_ee"},
+				{nLine: 1, nColumn: 18, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 20, level: 0, type: TokenType.IDENT, text: "$f_o$ur$_"},
+				{nLine: 1, nColumn: 29, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 31, level: 0, type: TokenType.IDENT, text: "#$five"},
+				{nLine: 1, nColumn: 37, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 39, level: 0, type: TokenType.MORE_REQUEST, text: "@_six$"},
+				{nLine: 1, nColumn: 39, level: 0, type: TokenType.ATTRIBUTE, text: "@_six$"},
 			]
 		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].value.length, source.length);
+		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
 	}
 );
 
@@ -253,43 +257,44 @@ Deno.test
 	() =>
 	{	const source = `0  1.1  .1  1.  123.456e9  123.456e-9  1.e3  .1e3  1.e+3  0n  0b01  0b01n  0o755  0o755n  0x2BE  0x2BEn`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.NUMBER, value: "0"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 4, level: 0, type: TokenType.NUMBER, value: "1.1"},
-				{nLine: 1, nColumn: 7, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 9, level: 0, type: TokenType.NUMBER, value: ".1"},
-				{nLine: 1, nColumn: 11, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 13, level: 0, type: TokenType.NUMBER, value: "1."},
-				{nLine: 1, nColumn: 15, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 17, level: 0, type: TokenType.NUMBER, value: "123.456e9"},
-				{nLine: 1, nColumn: 26, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 28, level: 0, type: TokenType.NUMBER, value: "123.456e-9"},
-				{nLine: 1, nColumn: 38, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 40, level: 0, type: TokenType.NUMBER, value: "1.e3"},
-				{nLine: 1, nColumn: 44, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 46, level: 0, type: TokenType.NUMBER, value: ".1e3"},
-				{nLine: 1, nColumn: 50, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 52, level: 0, type: TokenType.NUMBER, value: "1.e+3"},
-				{nLine: 1, nColumn: 57, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 59, level: 0, type: TokenType.NUMBER, value: "0n"},
-				{nLine: 1, nColumn: 61, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 63, level: 0, type: TokenType.NUMBER, value: "0b01"},
-				{nLine: 1, nColumn: 67, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 69, level: 0, type: TokenType.NUMBER, value: "0b01n"},
-				{nLine: 1, nColumn: 74, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 76, level: 0, type: TokenType.NUMBER, value: "0o755"},
-				{nLine: 1, nColumn: 81, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 83, level: 0, type: TokenType.NUMBER, value: "0o755n"},
-				{nLine: 1, nColumn: 89, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 91, level: 0, type: TokenType.NUMBER, value: "0x2BE"},
-				{nLine: 1, nColumn: 96, level: 0, type: TokenType.WHITESPACE, value: "  "},
-				{nLine: 1, nColumn: 98, level: 0, type: TokenType.MORE_REQUEST, value: "0x2BEn"},
-				{nLine: 1, nColumn: 98, level: 0, type: TokenType.NUMBER, value: "0x2BEn"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.NUMBER, text: "0"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 4, level: 0, type: TokenType.NUMBER, text: "1.1"},
+				{nLine: 1, nColumn: 7, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 9, level: 0, type: TokenType.NUMBER, text: ".1"},
+				{nLine: 1, nColumn: 11, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 13, level: 0, type: TokenType.NUMBER, text: "1."},
+				{nLine: 1, nColumn: 15, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 17, level: 0, type: TokenType.NUMBER, text: "123.456e9"},
+				{nLine: 1, nColumn: 26, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 28, level: 0, type: TokenType.NUMBER, text: "123.456e-9"},
+				{nLine: 1, nColumn: 38, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 40, level: 0, type: TokenType.NUMBER, text: "1.e3"},
+				{nLine: 1, nColumn: 44, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 46, level: 0, type: TokenType.NUMBER, text: ".1e3"},
+				{nLine: 1, nColumn: 50, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 52, level: 0, type: TokenType.NUMBER, text: "1.e+3"},
+				{nLine: 1, nColumn: 57, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 59, level: 0, type: TokenType.NUMBER, text: "0n"},
+				{nLine: 1, nColumn: 61, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 63, level: 0, type: TokenType.NUMBER, text: "0b01"},
+				{nLine: 1, nColumn: 67, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 69, level: 0, type: TokenType.NUMBER, text: "0b01n"},
+				{nLine: 1, nColumn: 74, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 76, level: 0, type: TokenType.NUMBER, text: "0o755"},
+				{nLine: 1, nColumn: 81, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 83, level: 0, type: TokenType.NUMBER, text: "0o755n"},
+				{nLine: 1, nColumn: 89, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 91, level: 0, type: TokenType.NUMBER, text: "0x2BE"},
+				{nLine: 1, nColumn: 96, level: 0, type: TokenType.WHITESPACE, text: "  "},
+				{nLine: 1, nColumn: 98, level: 0, type: TokenType.MORE_REQUEST, text: "0x2BEn"},
+				{nLine: 1, nColumn: 98, level: 0, type: TokenType.NUMBER, text: "0x2BEn"},
 			]
 		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].value.length, source.length);
+		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
 	}
 );
 
@@ -308,32 +313,33 @@ Deno.test
 			`
 		);
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING, value: "'One \\n\\xA0\\' '"},
-				{nLine: 1, nColumn: 16, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 2, nColumn: 1, level: 0, type: TokenType.STRING, value: '"One \\n\\xA0\\" "' },
-				{nLine: 2, nColumn: 16, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 3, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE, value: "`One \\n\\xA0\\`\n\tTwo`"},
-				{nLine: 4, nColumn: 9, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 5, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`One ${"},
-				{nLine: 5, nColumn: 8, level: 1, type: TokenType.NUMBER, value: "2"},
-				{nLine: 5, nColumn: 9, level: 0, type: TokenType.STRING_TEMPLATE_MID, value: "}, ${"},
-				{nLine: 5, nColumn: 14, level: 1, type: TokenType.STRING_TEMPLATE, value: "`Three`"},
-				{nLine: 5, nColumn: 21, level: 0, type: TokenType.STRING_TEMPLATE_END, value: "} Four`"},
-				{nLine: 5, nColumn: 28, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 6, nColumn: 1, level: 0, type: TokenType.OTHER, value: "{"},
-				{nLine: 6, nColumn: 2, level: 1, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 7, nColumn: 1, level: 1, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`One ${"},
-				{nLine: 7, nColumn: 8, level: 2, type: TokenType.NUMBER, value: "2"},
-				{nLine: 7, nColumn: 9, level: 1, type: TokenType.STRING_TEMPLATE_MID, value: "}, ${"},
-				{nLine: 7, nColumn: 14, level: 2, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`Three ${"},
-				{nLine: 7, nColumn: 23, level: 3, type: TokenType.NUMBER, value: "3"},
-				{nLine: 7, nColumn: 24, level: 2, type: TokenType.STRING_TEMPLATE_END, value: "}`"},
-				{nLine: 7, nColumn: 26, level: 1, type: TokenType.STRING_TEMPLATE_END, value: "} Four`"},
-				{nLine: 7, nColumn: 33, level: 1, type: TokenType.WHITESPACE, value: "\n"},
-				{nLine: 8, nColumn: 1, level: 1, type: TokenType.MORE_REQUEST, value: "}"},
-				{nLine: 8, nColumn: 1, level: 0, type: TokenType.OTHER, value: "}"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING, text: "'One \\n\\xA0\\' '"},
+				{nLine: 1, nColumn: 16, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 2, nColumn: 1, level: 0, type: TokenType.STRING, text: '"One \\n\\xA0\\" "' },
+				{nLine: 2, nColumn: 16, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 3, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE, text: "`One \\n\\xA0\\`\n\tTwo`"},
+				{nLine: 4, nColumn: 9, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 5, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`One ${"},
+				{nLine: 5, nColumn: 8, level: 1, type: TokenType.NUMBER, text: "2"},
+				{nLine: 5, nColumn: 9, level: 0, type: TokenType.STRING_TEMPLATE_MID, text: "}, ${"},
+				{nLine: 5, nColumn: 14, level: 1, type: TokenType.STRING_TEMPLATE, text: "`Three`"},
+				{nLine: 5, nColumn: 21, level: 0, type: TokenType.STRING_TEMPLATE_END, text: "} Four`"},
+				{nLine: 5, nColumn: 28, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 6, nColumn: 1, level: 0, type: TokenType.OTHER, text: "{"},
+				{nLine: 6, nColumn: 2, level: 1, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 7, nColumn: 1, level: 1, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`One ${"},
+				{nLine: 7, nColumn: 8, level: 2, type: TokenType.NUMBER, text: "2"},
+				{nLine: 7, nColumn: 9, level: 1, type: TokenType.STRING_TEMPLATE_MID, text: "}, ${"},
+				{nLine: 7, nColumn: 14, level: 2, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`Three ${"},
+				{nLine: 7, nColumn: 23, level: 3, type: TokenType.NUMBER, text: "3"},
+				{nLine: 7, nColumn: 24, level: 2, type: TokenType.STRING_TEMPLATE_END, text: "}`"},
+				{nLine: 7, nColumn: 26, level: 1, type: TokenType.STRING_TEMPLATE_END, text: "} Four`"},
+				{nLine: 7, nColumn: 33, level: 1, type: TokenType.WHITESPACE, text: "\n"},
+				{nLine: 8, nColumn: 1, level: 1, type: TokenType.MORE_REQUEST, text: "}"},
+				{nLine: 8, nColumn: 1, level: 0, type: TokenType.OTHER, text: "}"},
 			]
 		);
 	}
@@ -344,27 +350,28 @@ Deno.test
 	() =>
 	{	const source = `/^text$/sig + 1 /2e1/ 3 / /[a-z\\-]{3,4}\\?(?:.)/`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, value: "/^text$/sig"},
-				{nLine: 1, nColumn: 12, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 13, level: 0, type: TokenType.OTHER, value: "+"},
-				{nLine: 1, nColumn: 14, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 15, level: 0, type: TokenType.NUMBER, value: "1"},
-				{nLine: 1, nColumn: 16, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 17, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 18, level: 0, type: TokenType.NUMBER, value: "2e1"},
-				{nLine: 1, nColumn: 21, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 22, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 23, level: 0, type: TokenType.NUMBER, value: "3"},
-				{nLine: 1, nColumn: 24, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 25, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 26, level: 0, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 27, level: 0, type: TokenType.MORE_REQUEST, value: "/[a-z\\-]{3,4}\\?(?:.)/"},
-				{nLine: 1, nColumn: 27, level: 0, type: TokenType.REGEXP, value: "/[a-z\\-]{3,4}\\?(?:.)/"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/^text$/sig"},
+				{nLine: 1, nColumn: 12, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 13, level: 0, type: TokenType.OTHER, text: "+"},
+				{nLine: 1, nColumn: 14, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 15, level: 0, type: TokenType.NUMBER, text: "1"},
+				{nLine: 1, nColumn: 16, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 17, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 18, level: 0, type: TokenType.NUMBER, text: "2e1"},
+				{nLine: 1, nColumn: 21, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 22, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 23, level: 0, type: TokenType.NUMBER, text: "3"},
+				{nLine: 1, nColumn: 24, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 25, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 26, level: 0, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 27, level: 0, type: TokenType.MORE_REQUEST, text: "/[a-z\\-]{3,4}\\?(?:.)/"},
+				{nLine: 1, nColumn: 27, level: 0, type: TokenType.REGEXP, text: "/[a-z\\-]{3,4}\\?(?:.)/"},
 			]
 		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].value.length, source.length);
+		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
 	}
 );
 
@@ -373,28 +380,29 @@ Deno.test
 	() =>
 	{	const source = 'L0(L1(L2)[L2]{L2`L2${L3}L2`L2}L1)L0';
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, value: "L0"},
-				{nLine: 1, nColumn: 3,  level: 0, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 4,  level: 1, type: TokenType.IDENT, value: "L1"},
-				{nLine: 1, nColumn: 6,  level: 1, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 7,  level: 2, type: TokenType.IDENT, value: "L2"},
-				{nLine: 1, nColumn: 9,  level: 1, type: TokenType.OTHER, value: ")"},
-				{nLine: 1, nColumn: 10, level: 1, type: TokenType.OTHER, value: "["},
-				{nLine: 1, nColumn: 11, level: 2, type: TokenType.IDENT, value: "L2"},
-				{nLine: 1, nColumn: 13, level: 1, type: TokenType.OTHER, value: "]"},
-				{nLine: 1, nColumn: 14, level: 1, type: TokenType.OTHER, value: "{"},
-				{nLine: 1, nColumn: 15, level: 2, type: TokenType.IDENT, value: "L2"},
-				{nLine: 1, nColumn: 17, level: 2, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`L2${"},
-				{nLine: 1, nColumn: 22, level: 3, type: TokenType.IDENT, value: "L3"},
-				{nLine: 1, nColumn: 24, level: 2, type: TokenType.STRING_TEMPLATE_END, value: "}L2`"},
-				{nLine: 1, nColumn: 28, level: 2, type: TokenType.IDENT, value: "L2"},
-				{nLine: 1, nColumn: 30, level: 1, type: TokenType.OTHER, value: "}"},
-				{nLine: 1, nColumn: 31, level: 1, type: TokenType.IDENT, value: "L1"},
-				{nLine: 1, nColumn: 33, level: 0, type: TokenType.OTHER, value: ")"},
-				{nLine: 1, nColumn: 34, level: 0, type: TokenType.MORE_REQUEST, value: "L0"},
-				{nLine: 1, nColumn: 34, level: 0, type: TokenType.IDENT, value: "L0"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3,  level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4,  level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 6,  level: 1, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 7,  level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 9,  level: 1, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 10, level: 1, type: TokenType.OTHER, text: "["},
+				{nLine: 1, nColumn: 11, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 13, level: 1, type: TokenType.OTHER, text: "]"},
+				{nLine: 1, nColumn: 14, level: 1, type: TokenType.OTHER, text: "{"},
+				{nLine: 1, nColumn: 15, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 17, level: 2, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`L2${"},
+				{nLine: 1, nColumn: 22, level: 3, type: TokenType.IDENT, text: "L3"},
+				{nLine: 1, nColumn: 24, level: 2, type: TokenType.STRING_TEMPLATE_END, text: "}L2`"},
+				{nLine: 1, nColumn: 28, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 30, level: 1, type: TokenType.OTHER, text: "}"},
+				{nLine: 1, nColumn: 31, level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 33, level: 0, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 34, level: 0, type: TokenType.MORE_REQUEST, text: "L0"},
+				{nLine: 1, nColumn: 34, level: 0, type: TokenType.IDENT, text: "L0"},
 			]
 		);
 	}
@@ -405,57 +413,58 @@ Deno.test
 	() =>
 	{	const source = `....+++---~!***a/%<<>>>>><=>====!====&&&|||^???.?+=-=*=**=/=%=<<=>>=>>>=&=&&=|=||=??=,`;
 		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.OTHER, value: "..."},
-				{nLine: 1, nColumn: 4,  level: 0, type: TokenType.OTHER, value: "."},
-				{nLine: 1, nColumn: 5,  level: 0, type: TokenType.OTHER, value: "++"},
-				{nLine: 1, nColumn: 7,  level: 0, type: TokenType.OTHER, value: "+"},
-				{nLine: 1, nColumn: 8,  level: 0, type: TokenType.OTHER, value: "--"},
-				{nLine: 1, nColumn: 10, level: 0, type: TokenType.OTHER, value: "-"},
-				{nLine: 1, nColumn: 11, level: 0, type: TokenType.OTHER, value: "~"},
-				{nLine: 1, nColumn: 12, level: 0, type: TokenType.OTHER, value: "!"},
-				{nLine: 1, nColumn: 13, level: 0, type: TokenType.OTHER, value: "**"},
-				{nLine: 1, nColumn: 15, level: 0, type: TokenType.OTHER, value: "*"},
-				{nLine: 1, nColumn: 16, level: 0, type: TokenType.IDENT, value: "a"},
-				{nLine: 1, nColumn: 17, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 18, level: 0, type: TokenType.OTHER, value: "%"},
-				{nLine: 1, nColumn: 19, level: 0, type: TokenType.OTHER, value: "<<"},
-				{nLine: 1, nColumn: 21, level: 0, type: TokenType.OTHER, value: ">>>"},
-				{nLine: 1, nColumn: 24, level: 0, type: TokenType.OTHER, value: ">>"},
-				{nLine: 1, nColumn: 26, level: 0, type: TokenType.OTHER, value: "<="},
-				{nLine: 1, nColumn: 28, level: 0, type: TokenType.OTHER, value: ">="},
-				{nLine: 1, nColumn: 30, level: 0, type: TokenType.OTHER, value: "==="},
-				{nLine: 1, nColumn: 33, level: 0, type: TokenType.OTHER, value: "!=="},
-				{nLine: 1, nColumn: 36, level: 0, type: TokenType.OTHER, value: "=="},
-				{nLine: 1, nColumn: 38, level: 0, type: TokenType.OTHER, value: "&&"},
-				{nLine: 1, nColumn: 40, level: 0, type: TokenType.OTHER, value: "&"},
-				{nLine: 1, nColumn: 41, level: 0, type: TokenType.OTHER, value: "||"},
-				{nLine: 1, nColumn: 43, level: 0, type: TokenType.OTHER, value: "|"},
-				{nLine: 1, nColumn: 44, level: 0, type: TokenType.OTHER, value: "^"},
-				{nLine: 1, nColumn: 45, level: 0, type: TokenType.OTHER, value: "??"},
-				{nLine: 1, nColumn: 47, level: 0, type: TokenType.OTHER, value: "?."},
-				{nLine: 1, nColumn: 49, level: 0, type: TokenType.OTHER, value: "?"},
-				{nLine: 1, nColumn: 50, level: 0, type: TokenType.OTHER, value: "+="},
-				{nLine: 1, nColumn: 52, level: 0, type: TokenType.OTHER, value: "-="},
-				{nLine: 1, nColumn: 54, level: 0, type: TokenType.OTHER, value: "*="},
-				{nLine: 1, nColumn: 56, level: 0, type: TokenType.OTHER, value: "**="},
-				{nLine: 1, nColumn: 59, level: 0, type: TokenType.MORE_REQUEST, value: "/=%=<<=>>=>>>=&=&&=|=||=??=,"}, // depending on continuation, this can be a regular expression
-				{nLine: 1, nColumn: 59, level: 0, type: TokenType.OTHER, value: "/="},
-				{nLine: 1, nColumn: 61, level: 0, type: TokenType.OTHER, value: "%="},
-				{nLine: 1, nColumn: 63, level: 0, type: TokenType.OTHER, value: "<<="},
-				{nLine: 1, nColumn: 66, level: 0, type: TokenType.OTHER, value: ">>="},
-				{nLine: 1, nColumn: 69, level: 0, type: TokenType.OTHER, value: ">>>="},
-				{nLine: 1, nColumn: 73, level: 0, type: TokenType.OTHER, value: "&="},
-				{nLine: 1, nColumn: 75, level: 0, type: TokenType.OTHER, value: "&&="},
-				{nLine: 1, nColumn: 78, level: 0, type: TokenType.OTHER, value: "|="},
-				{nLine: 1, nColumn: 80, level: 0, type: TokenType.OTHER, value: "||="},
-				{nLine: 1, nColumn: 83, level: 0, type: TokenType.OTHER, value: "??="},
-				{nLine: 1, nColumn: 86, level: 0, type: TokenType.MORE_REQUEST, value: ","},
-				{nLine: 1, nColumn: 86, level: 0, type: TokenType.OTHER, value: ","},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.OTHER, text: "..."},
+				{nLine: 1, nColumn: 4,  level: 0, type: TokenType.OTHER, text: "."},
+				{nLine: 1, nColumn: 5,  level: 0, type: TokenType.OTHER, text: "++"},
+				{nLine: 1, nColumn: 7,  level: 0, type: TokenType.OTHER, text: "+"},
+				{nLine: 1, nColumn: 8,  level: 0, type: TokenType.OTHER, text: "--"},
+				{nLine: 1, nColumn: 10, level: 0, type: TokenType.OTHER, text: "-"},
+				{nLine: 1, nColumn: 11, level: 0, type: TokenType.OTHER, text: "~"},
+				{nLine: 1, nColumn: 12, level: 0, type: TokenType.OTHER, text: "!"},
+				{nLine: 1, nColumn: 13, level: 0, type: TokenType.OTHER, text: "**"},
+				{nLine: 1, nColumn: 15, level: 0, type: TokenType.OTHER, text: "*"},
+				{nLine: 1, nColumn: 16, level: 0, type: TokenType.IDENT, text: "a"},
+				{nLine: 1, nColumn: 17, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 18, level: 0, type: TokenType.OTHER, text: "%"},
+				{nLine: 1, nColumn: 19, level: 0, type: TokenType.OTHER, text: "<<"},
+				{nLine: 1, nColumn: 21, level: 0, type: TokenType.OTHER, text: ">>>"},
+				{nLine: 1, nColumn: 24, level: 0, type: TokenType.OTHER, text: ">>"},
+				{nLine: 1, nColumn: 26, level: 0, type: TokenType.OTHER, text: "<="},
+				{nLine: 1, nColumn: 28, level: 0, type: TokenType.OTHER, text: ">="},
+				{nLine: 1, nColumn: 30, level: 0, type: TokenType.OTHER, text: "==="},
+				{nLine: 1, nColumn: 33, level: 0, type: TokenType.OTHER, text: "!=="},
+				{nLine: 1, nColumn: 36, level: 0, type: TokenType.OTHER, text: "=="},
+				{nLine: 1, nColumn: 38, level: 0, type: TokenType.OTHER, text: "&&"},
+				{nLine: 1, nColumn: 40, level: 0, type: TokenType.OTHER, text: "&"},
+				{nLine: 1, nColumn: 41, level: 0, type: TokenType.OTHER, text: "||"},
+				{nLine: 1, nColumn: 43, level: 0, type: TokenType.OTHER, text: "|"},
+				{nLine: 1, nColumn: 44, level: 0, type: TokenType.OTHER, text: "^"},
+				{nLine: 1, nColumn: 45, level: 0, type: TokenType.OTHER, text: "??"},
+				{nLine: 1, nColumn: 47, level: 0, type: TokenType.OTHER, text: "?."},
+				{nLine: 1, nColumn: 49, level: 0, type: TokenType.OTHER, text: "?"},
+				{nLine: 1, nColumn: 50, level: 0, type: TokenType.OTHER, text: "+="},
+				{nLine: 1, nColumn: 52, level: 0, type: TokenType.OTHER, text: "-="},
+				{nLine: 1, nColumn: 54, level: 0, type: TokenType.OTHER, text: "*="},
+				{nLine: 1, nColumn: 56, level: 0, type: TokenType.OTHER, text: "**="},
+				{nLine: 1, nColumn: 59, level: 0, type: TokenType.MORE_REQUEST, text: "/=%=<<=>>=>>>=&=&&=|=||=??=,"}, // depending on continuation, this can be a regular expression
+				{nLine: 1, nColumn: 59, level: 0, type: TokenType.OTHER, text: "/="},
+				{nLine: 1, nColumn: 61, level: 0, type: TokenType.OTHER, text: "%="},
+				{nLine: 1, nColumn: 63, level: 0, type: TokenType.OTHER, text: "<<="},
+				{nLine: 1, nColumn: 66, level: 0, type: TokenType.OTHER, text: ">>="},
+				{nLine: 1, nColumn: 69, level: 0, type: TokenType.OTHER, text: ">>>="},
+				{nLine: 1, nColumn: 73, level: 0, type: TokenType.OTHER, text: "&="},
+				{nLine: 1, nColumn: 75, level: 0, type: TokenType.OTHER, text: "&&="},
+				{nLine: 1, nColumn: 78, level: 0, type: TokenType.OTHER, text: "|="},
+				{nLine: 1, nColumn: 80, level: 0, type: TokenType.OTHER, text: "||="},
+				{nLine: 1, nColumn: 83, level: 0, type: TokenType.OTHER, text: "??="},
+				{nLine: 1, nColumn: 86, level: 0, type: TokenType.MORE_REQUEST, text: ","},
+				{nLine: 1, nColumn: 86, level: 0, type: TokenType.OTHER, text: ","},
 			]
 		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].value.length, source.length);
+		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
 	}
 );
 
@@ -465,76 +474,76 @@ Deno.test
 	{	let source = `L0(`;
 		let tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, value: "L0"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.MORE_REQUEST, value: "("},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.ERROR, value: ""},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.MORE_REQUEST, text: "("},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.ERROR, text: ""},
 			]
 		);
 
 		source = `L0(L1))`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, value: "L0"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, value: "L1"},
-				{nLine: 1, nColumn: 6, level: 0, type: TokenType.OTHER, value: ")"},
-				{nLine: 1, nColumn: 7, level: 0, type: TokenType.MORE_REQUEST, value: ")"},
-				{nLine: 1, nColumn: 7, level: 0, type: TokenType.ERROR, value: ")"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 6, level: 0, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 7, level: 0, type: TokenType.MORE_REQUEST, text: ")"},
+				{nLine: 1, nColumn: 7, level: 0, type: TokenType.ERROR, text: ")"},
 			]
 		);
 
 		source = `L0(L1])`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, value: "L0"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, value: "L1"},
-				{nLine: 1, nColumn: 6, level: 1, type: TokenType.ERROR, value: "]"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 6, level: 1, type: TokenType.ERROR, text: "]"},
 			]
 		);
 
 		source = `L0(L1)}`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, value: "L0"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, value: "("},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, value: "L1"},
-				{nLine: 1, nColumn: 6, level: 0, type: TokenType.OTHER, value: ")"},
-				{nLine: 1, nColumn: 7, level: 0, type: TokenType.MORE_REQUEST, value: "}"},
-				{nLine: 1, nColumn: 7, level: 0, type: TokenType.ERROR, value: "}"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 6, level: 0, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 7, level: 0, type: TokenType.MORE_REQUEST, text: "}"},
+				{nLine: 1, nColumn: 7, level: 0, type: TokenType.ERROR, text: "}"},
 			]
 		);
 
 		source = '`${ /*hello*/ }`';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`${"},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.WHITESPACE, value: " "},
-				{nLine: 1, nColumn: 5, level: 1, type: TokenType.ERROR, value: "/*hello*/"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.WHITESPACE, text: " "},
+				{nLine: 1, nColumn: 5, level: 1, type: TokenType.ERROR, text: "/*hello*/"},
 			]
 		);
 
 		source = '-\x7F';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "-"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, value: "\x7F"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, value: "\x7F"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "-"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: "\x7F"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, text: "\x7F"},
 			]
 		);
 
 		source = '"\t>\n"';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
 			]
 		);
 
@@ -555,17 +564,17 @@ L:			while ((token = it.next().value))
 				tokens.push(token);
 			}
 			assertEquals
-			(	tokens,
-				[	{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, value: "\t"},
-					{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, value: ">"},
-					{nLine: 1, nColumn: 6, level: 0, type: TokenType.WHITESPACE, value: "\n"},
-					{nLine: 2, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, value: '"'},
+			(	tokens.map(v => Object.assign({}, v)),
+				[	{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, text: "\t"},
+					{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, text: ">"},
+					{nLine: 1, nColumn: 6, level: 0, type: TokenType.WHITESPACE, text: "\n"},
+					{nLine: 2, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, text: '"'},
 				]
 			);
 			assertEquals
-			(	ignored,
-				[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
-					{nLine: 2, nColumn: 1, level: 0, type: TokenType.ERROR, value: '"'},
+			(	ignored.map(v => Object.assign({}, v)),
+				[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
+					{nLine: 2, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
 				]
 			);
 		}
@@ -573,20 +582,20 @@ L:			while ((token = it.next().value))
 		source = '`\t>';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, value: "`\t>"},
-				{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, value: "`\t>"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, text: "`\t>"},
+				{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: "`\t>"},
 			]
 		);
 
 		source = '`${1}>';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, value: "`${"},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.NUMBER, value: "1"},
-				{nLine: 1, nColumn: 5, level: 1, type: TokenType.MORE_REQUEST, value: "}>"},
-				{nLine: 1, nColumn: 5, level: 0, type: TokenType.ERROR, value: "}>"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.NUMBER, text: "1"},
+				{nLine: 1, nColumn: 5, level: 1, type: TokenType.MORE_REQUEST, text: "}>"},
+				{nLine: 1, nColumn: 5, level: 0, type: TokenType.ERROR, text: "}>"},
 			]
 		);
 	}
@@ -598,72 +607,161 @@ Deno.test
 	{	let source = `/^{/;`;
 		let tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, value: "/^{/"},
-				{nLine: 1, nColumn: 5, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, value: ";"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/^{/"},
+				{nLine: 1, nColumn: 5, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
+				{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, text: ";"},
 			]
 		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].value.length, source.length);
+		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
 
 		source = `/)/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, value: ")"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, text: ")"},
 			]
 		);
 
 		source = `/a\r/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.IDENT, value: "a"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.WHITESPACE, value: "\r"},
-				{nLine: 2, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 2, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 2, nColumn: 2, level: 0, type: TokenType.OTHER, value: ";"},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.IDENT, text: "a"},
+				{nLine: 1, nColumn: 3, level: 0, type: TokenType.WHITESPACE, text: "\r"},
+				{nLine: 2, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 2, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
+				{nLine: 2, nColumn: 2, level: 0, type: TokenType.OTHER, text: ";"},
 			]
 		);
 
 		source = `/[\r/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, value: "["},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.WHITESPACE, value: "\r"},
-				{nLine: 2, nColumn: 1, level: 1, type: TokenType.MORE_REQUEST, value: "/;"},
-				{nLine: 2, nColumn: 1, level: 1, type: TokenType.OTHER, value: "/"},
-				{nLine: 2, nColumn: 2, level: 1, type: TokenType.MORE_REQUEST, value: ";"},
-				{nLine: 2, nColumn: 2, level: 1, type: TokenType.OTHER, value: ";"},
-				{nLine: 2, nColumn: 3, level: 1, type: TokenType.ERROR, value: ""},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "["},
+				{nLine: 1, nColumn: 3, level: 1, type: TokenType.WHITESPACE, text: "\r"},
+				{nLine: 2, nColumn: 1, level: 1, type: TokenType.MORE_REQUEST, text: "/;"},
+				{nLine: 2, nColumn: 1, level: 1, type: TokenType.OTHER, text: "/"},
+				{nLine: 2, nColumn: 2, level: 1, type: TokenType.MORE_REQUEST, text: ";"},
+				{nLine: 2, nColumn: 2, level: 1, type: TokenType.OTHER, text: ";"},
+				{nLine: 2, nColumn: 3, level: 1, type: TokenType.ERROR, text: ""},
 			]
 		);
 
 		source = `/[`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, value: "["},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, value: "["},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.ERROR, value: ""},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: "["},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "["},
+				{nLine: 1, nColumn: 3, level: 1, type: TokenType.ERROR, text: ""},
 			]
 		);
 
 		source = `/{a`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens,
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, value: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, value: "{"},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.MORE_REQUEST, value: "a"},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.IDENT, value: "a"},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.ERROR, value: ""},
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
+				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "{"},
+				{nLine: 1, nColumn: 3, level: 1, type: TokenType.MORE_REQUEST, text: "a"},
+				{nLine: 1, nColumn: 3, level: 1, type: TokenType.IDENT, text: "a"},
+				{nLine: 1, nColumn: 4, level: 1, type: TokenType.ERROR, text: ""},
 			]
 		);
+	}
+);
+
+Deno.test
+(	'Token value',
+	() =>
+	{	let token = [...jstok('// Line comment ')][1]; // [0] is MORE_REQUEST
+		assertEquals(token.getValue(), ' Line comment ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('// Line comment \r')][0];
+		assertEquals(token.getValue(), ' Line comment ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('/* Comment */\n')][0];
+		assertEquals(token.getValue(), ' Comment ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('1.2e-3\r')][0];
+		assertEquals(token.getValue(), '1.2e-3');
+		assertEquals(token.getNumberValue(), 1.2e-3);
+
+		token = [...jstok('1_2.3_4e-5_6\r')][0];
+		assertEquals(token.getValue(), '1_2.3_4e-5_6');
+		assertEquals(token.getNumberValue(), 1_2.3_4e-5_6);
+
+		token = [...jstok('1234567890123456789012345678901234567890n\r')][0];
+		assertEquals(token.getValue(), '1234567890123456789012345678901234567890n');
+		assertEquals(token.getNumberValue(), 1234567890123456789012345678901234567890n);
+
+		token = [...jstok('010\r')][0];
+		assertEquals(token.getValue(), '010');
+		assertEquals(token.getNumberValue(), 0o10);
+
+		token = [...jstok('018\r')][0];
+		assertEquals(token.getValue(), '018');
+		assertEquals(token.getNumberValue(), 18);
+
+		token = [...jstok('0o10\r')][0];
+		assertEquals(token.getValue(), '0o10');
+		assertEquals(token.getNumberValue(), 0o10);
+
+		token = [...jstok('0x1f\r')][0];
+		assertEquals(token.getValue(), '0x1f');
+		assertEquals(token.getNumberValue(), 0x1f);
+
+		token = [...jstok('0x1fn\r')][0];
+		assertEquals(token.getValue(), '0x1fn');
+		assertEquals(token.getNumberValue(), 0x1fn);
+
+		token = [...jstok('" String "\n')][0];
+		assertEquals(token.getValue(), ' String ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('" String\\t\\" "\n')][0];
+		assertEquals(token.getValue(), ' String\t" ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok("' String\\t\\' '\n")][0];
+		assertEquals(token.getValue(), " String\t' ");
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok("' String\\\r '\n")][0];
+		assertEquals(token.getValue(), " String ");
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok("' String\\\n '\n")][0];
+		assertEquals(token.getValue(), " String ");
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok("' String\\\r\n \\0\\1 \\0127 \\178 \\r\\n\\v\\b\\f \\x40\\xaF\\xAf \\u12AB\\uFE34\\uabcd \\u{1}\\u{a2B}'\n")][0];
+		assertEquals(token.getValue(), " String \0\x01 \n7 \x0F8 \r\n\v\b\f \x40\xaF\xAf \u12AB\uFE34\uabcd \u{1}\u{a2B}");
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('` String `\n')][0];
+		assertEquals(token.getValue(), ' String ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('`${0} String `\n')][2];
+		assertEquals(token.getValue(), ' String ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('`${0} String ${1}`\n')][2];
+		assertEquals(token.getValue(), ' String ');
+		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('` String ${0}`\n')][0];
+		assertEquals(token.getValue(), ' String ');
+		assertEquals(token.getNumberValue(), NaN);
 	}
 );

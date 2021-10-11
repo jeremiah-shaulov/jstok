@@ -4,6 +4,9 @@ const BUFFER_SIZE = 16*1024;
 
 const defaultDecoder = new TextDecoder;
 
+const isBigEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] == 0;
+const decoder16 = new TextDecoder(isBigEndian ? 'utf-16be' : 'utf-16');
+
 const C_HASH = '#'.charCodeAt(0);
 const C_EXCL = '!'.charCodeAt(0);
 const C_APOS = "'".charCodeAt(0);
@@ -13,12 +16,16 @@ const C_AT = '@'.charCodeAt(0);
 const C_EQ = '='.charCodeAt(0);
 const C_PLUS = '+'.charCodeAt(0);
 const C_MINUS = '-'.charCodeAt(0);
+const C_TIMES = '*'.charCodeAt(0);
 const C_SLASH = '/'.charCodeAt(0);
 const C_BACKSLASH = '\\'.charCodeAt(0);
 const C_COMMA = ','.charCodeAt(0);
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
 const C_TAB = '\t'.charCodeAt(0);
+const C_VTAB = '\v'.charCodeAt(0);
+const C_BACKSPACE = '\b'.charCodeAt(0);
+const C_FORM_FEED = '\f'.charCodeAt(0);
 const C_PAREN_OPEN = '('.charCodeAt(0);
 const C_PAREN_CLOSE = ')'.charCodeAt(0);
 const C_SQUARE_OPEN = '['.charCodeAt(0);
@@ -26,9 +33,62 @@ const C_SQUARE_CLOSE = ']'.charCodeAt(0);
 const C_BRACE_OPEN = '{'.charCodeAt(0);
 const C_BRACE_CLOSE = '}'.charCodeAt(0);
 const C_ZERO = '0'.charCodeAt(0);
+const C_ONE = '1'.charCodeAt(0);
+const C_TWO = '2'.charCodeAt(0);
+const C_THREE = '3'.charCodeAt(0);
+const C_FOUR = '4'.charCodeAt(0);
+const C_FIVE = '5'.charCodeAt(0);
+const C_SIX = '6'.charCodeAt(0);
+const C_SEVEN = '7'.charCodeAt(0);
 const C_NINE = '9'.charCodeAt(0);
 const C_A = 'a'.charCodeAt(0);
+const C_B = 'b'.charCodeAt(0);
+const C_F = 'f'.charCodeAt(0);
+const C_N = 'n'.charCodeAt(0);
+const C_O = 'o'.charCodeAt(0);
+const C_R = 'r'.charCodeAt(0);
+const C_T = 't'.charCodeAt(0);
+const C_U = 'u'.charCodeAt(0);
+const C_V = 'v'.charCodeAt(0);
+const C_X = 'x'.charCodeAt(0);
 const C_Z = 'z'.charCodeAt(0);
+const C_A_CAP = 'A'.charCodeAt(0);
+const C_B_CAP = 'B'.charCodeAt(0);
+const C_O_CAP = 'O'.charCodeAt(0);
+const C_X_CAP = 'X'.charCodeAt(0);
+const C_Z_CAP = 'Z'.charCodeAt(0);
+
+const RE_LINE = /[\r\n]/;
+
+const RE_STRING_TEMPLATE_STR = String.raw
+`	(?: [^${'`'}\\$] | [$](?!\{) )*  (?:\\(?:.|$) (?: [^${'`'}\\$] | [$](?!\{) )* )* (?:${'`'} | [$]\{)?
+`;
+const RE_TOKENIZER_STR = String.raw
+`	(\p{White_Space}) \p{White_Space}*  |
+	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
+	[@#]? ([_$] | \p{General_Category=Letter})  (?:[_$0-9] | \p{General_Category=Letter})*  |
+	(	0[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
+		0[Oo] (?:[0-7]+|$)  n?  |
+		0[Bb] (?:[01]+|$)  n?  |
+		(?:	[0-9] [0-9_]*
+			(?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
+						\. [0-9_]+    (?: e [+\-]? [0-9_]+ )?
+		)
+	)  |
+	' [^'\\\r\n]* (?:\\(?:\r\n|.|$) [^'\\\r\n]*)* (?:'|$)  |
+	" [^"\\\r\n]* (?:\\(?:\r\n|.|$) [^"\\\r\n]*)* (?:"|$)  |
+	${'`'}  ${RE_STRING_TEMPLATE_STR}  |
+	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | ={1,3} | !=?=? | [.](?:[.][.])?
+`;
+const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
+const RE_TOKENIZER_INSIDE_TEMPLATE = new RegExp((RE_TOKENIZER_STR + '|\\}'+RE_STRING_TEMPLATE_STR + '|.').replace(/\s+/g, ''), 'suy');
+
+const enum Structure
+{	PAREN,	// (
+	SQUARE,	// [
+	BRACE,	// {
+	STRING_TEMPLATE, // `${
+}
 
 /**	`WHITESPACE` - Any number of any whitespace characters. Multiple such token types are not generated in sequence.
 	`COMMENT` - One single-line or multiline comment, or hashbang.
@@ -62,51 +122,188 @@ export const enum TokenType
 	ERROR,
 }
 
-/**	`nLine` number of line where this token starts.
+/**	Represents a JavaScript token.
+	`text` - original JavaScript token text.
+	`type` - token type.
+	`nLine` number of line where this token starts.
 	`nColumn` - number of column on the line where this token starts.
 	`level` - nesting level. Entering `(`, `[` and `{` increments the level. Also the level is incremented when entering parameters in string templates.
-	`type` - token type.
-	`value` - token text.
  **/
-export type Token =
-{	nLine: number;
-	nColumn: number;
-	level: number,
-	type: TokenType;
-	value: string;
-};
+export class Token
+{	constructor
+	(	public text: string,
+		public type: TokenType,
+		public nLine = 1,
+		public nColumn = 1,
+		public level = 0,
+	)
+	{
+	}
 
-const enum Structure
-{	PAREN,	// (
-	SQUARE,	// [
-	BRACE,	// {
-	STRING_TEMPLATE, // `${
+	/**	Returns original JavaScript token.
+		For `TokenType.MORE_REQUEST` returns empty string.
+	 **/
+	toString()
+	{	return this.type==TokenType.MORE_REQUEST ? '' : this.text;
+	}
+
+	/**	Get token string value.
+		For `TokenType.COMMENT` - it's the text after `//` or between `/*` and `*` `/`.
+		For `TokenType.STRING` and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
+		For `TokenType.MORE_REQUEST` - empty string.
+		For others, including `TokenType.NUMBER` - it's the original JavaScript token.
+	 **/
+	getValue()
+	{	const {type, text} = this;
+		switch (type)
+		{	case TokenType.COMMENT:
+			{	return text.charCodeAt(1)==C_SLASH ? text.slice(2) : text.slice(2, -2);
+			}
+			case TokenType.STRING: // '...', "..."
+			case TokenType.STRING_TEMPLATE: // `...`
+			case TokenType.STRING_TEMPLATE_BEGIN: // `...${
+			case TokenType.STRING_TEMPLATE_MID: // }...${
+			case TokenType.STRING_TEMPLATE_END: // }...`
+			{	const iEnd = text.length - (type==TokenType.STRING_TEMPLATE_BEGIN || type==TokenType.STRING_TEMPLATE_MID ? 2 : 1);
+				for (let i=1; i<iEnd; i++)
+				{	let c = text.charCodeAt(i);
+					if (c == C_BACKSLASH)
+					{	const buffer = new Uint16Array(iEnd - 1);
+						let j = 0;
+						for (let i2=1; i2<i; i2++)
+						{	buffer[j++] = text.charCodeAt(i2);
+						}
+						for (; i<iEnd; i++)
+						{	c = text.charCodeAt(i);
+							if (c == C_BACKSLASH)
+							{	c = text.charCodeAt(++i);
+								switch (c)
+								{	case C_CR:
+										// remove \ at the end of line, and the newline char that follows it
+										if (text.charCodeAt(i+1) == C_LF)
+										{	i++;
+										}
+										continue;
+									case C_LF:
+										// remove \ at the end of line, and the newline char that follows it
+										continue;
+									case C_R:
+										c = C_CR;
+										break;
+									case C_N:
+										c = C_LF;
+										break;
+									case C_T:
+										c = C_TAB;
+										break;
+									case C_V:
+										c = C_VTAB;
+										break;
+									case C_B:
+										c = C_BACKSPACE;
+										break;
+									case C_F:
+										c = C_FORM_FEED;
+										break;
+									case C_X:
+									{	let c1 = text.charCodeAt(++i);
+										let c0 = text.charCodeAt(++i);
+										c1 -= c1>=C_ZERO && c1<=C_NINE ? C_ZERO : c1>=C_A_CAP && c1<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+										c0 -= c0>=C_ZERO && c0<=C_NINE ? C_ZERO : c0>=C_A_CAP && c0<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+										c = (c1 << 4) | c0;
+										break;
+									}
+									case C_U:
+									{	let c3 = text.charCodeAt(++i);
+										if (c3 != C_BRACE_OPEN)
+										{	let c2 = text.charCodeAt(++i);
+											let c1 = text.charCodeAt(++i);
+											let c0 = text.charCodeAt(++i);
+											c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+											c2 -= c2>=C_ZERO && c2<=C_NINE ? C_ZERO : c2>=C_A_CAP && c2<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+											c1 -= c1>=C_ZERO && c1<=C_NINE ? C_ZERO : c1>=C_A_CAP && c1<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+											c0 -= c0>=C_ZERO && c0<=C_NINE ? C_ZERO : c0>=C_A_CAP && c0<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+											c = (c3 << 12) | (c2 << 8) | (c1 << 4) | c0;
+										}
+										else
+										{	c = 0;
+											while (++i < iEnd)
+											{	c3 = text.charCodeAt(i);
+												if (c3 == C_BRACE_CLOSE)
+												{	break;
+												}
+												c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+												c <<= 4;
+												c |= c3;
+											}
+										}
+										break;
+									}
+									case C_ZERO:
+									case C_ONE:
+									case C_TWO:
+									case C_THREE:
+									case C_FOUR:
+									case C_FIVE:
+									case C_SIX:
+									case C_SEVEN:
+									{	c -= C_ZERO;
+										const iEnd2 = Math.min(iEnd, i+2);
+										while (i < iEnd2)
+										{	const c0 = text.charCodeAt(++i);
+											if (c0<C_ZERO || c0>C_SEVEN)
+											{	i--;
+												break;
+											}
+											c <<= 3;
+											c |= c0 - C_ZERO;
+										}
+									}
+								}
+							}
+							buffer[j++] = c;
+						}
+						return decoder16.decode(buffer.subarray(0, j));
+					}
+				}
+				return text.slice(1, iEnd);
+			}
+			case TokenType.MORE_REQUEST:
+				return '';
+			default:
+				return text;
+		}
+	}
+
+	/**	For `TokenType.NUMBER` returns `Number` or `BigInt` value of the token.
+		For others returns `NaN`.
+	 **/
+	getNumberValue()
+	{	let {type, text} = this;
+		if (type != TokenType.NUMBER)
+		{	return NaN;
+		}
+		if (text.indexOf('_') != -1)
+		{	text = text.replaceAll('_', '');
+		}
+		if (text.charCodeAt(text.length-1) == C_N)
+		{	// BigInt
+			return BigInt(text.slice(0, -1));
+		}
+		else
+		{	// Number
+			if (text.charCodeAt(0) == C_ZERO)
+			{	const c1 = text.charCodeAt(1);
+				if (c1!=C_X && c1!=C_X_CAP && c1!=C_O && c1!=C_O_CAP && c1!=C_B && c1!=C_B_CAP)
+				{	if (text.indexOf('8')==-1 && text.indexOf('9')==-1)
+					{	text = '0o'+text;
+					}
+				}
+			}
+			return Number(text);
+		}
+	}
 }
-
-const RE_LINE = /[\r\n]/;
-
-const RE_STRING_TEMPLATE_STR = String.raw
-`	(?: [^${'`'}\\$] | [$](?!\{) )*  (?:\\(?:.|$) (?: [^${'`'}\\$] | [$](?!\{) )* )* (?:${'`'} | [$]\{)?
-`;
-const RE_TOKENIZER_STR = String.raw
-`	(\p{White_Space}) \p{White_Space}*  |
-	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
-	[@#]? ([_$] | \p{General_Category=Letter})  (?:[_$0-9] | \p{General_Category=Letter})*  |
-	(	0[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
-		0[Oo] (?:[0-7]+|$)  n?  |
-		0[Bb] (?:[01]+|$)  n?  |
-		(?:	[0-9] [0-9_]*
-			(?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
-						\. [0-9_]+    (?: e [+\-]? [0-9_]+ )?
-		)
-	)  |
-	' [^'\\\r\n]* (?:\\(?:.|$) [^'\\\r\n]*)* (?:'|$)  |
-	" [^"\\\r\n]* (?:\\(?:.|$) [^"\\\r\n]*)* (?:"|$)  |
-	${'`'}  ${RE_STRING_TEMPLATE_STR}  |
-	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | ={1,3} | !=?=? | [.](?:[.][.])?
-`;
-const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
-const RE_TOKENIZER_INSIDE_TEMPLATE = new RegExp((RE_TOKENIZER_STR + '|\\}'+RE_STRING_TEMPLATE_STR + '|.').replace(/\s+/g, ''), 'suy');
 
 /**	Returns iterator over JavaScript tokens found in source code.
 	`nLine` and `nColumn` - will start counting lines from these initial values.
@@ -123,64 +320,64 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 	if (source.charCodeAt(0)==C_HASH && source.charCodeAt(1)==C_EXCL)
 	{	const pos = source.match(RE_LINE)?.index ?? source.length;
 		re.lastIndex = pos;
-		yield {nLine, nColumn, level, type: TokenType.COMMENT, value: source.slice(0, pos)};
+		yield new Token(source.slice(0, pos), TokenType.COMMENT, nLine, nColumn, level);
 	}
 
 	let m;
 	while ((m = re.exec(source)))
-	{	let [value, isSpace, isIdent, isNumber] = m;
+	{	let [text, isSpace, isIdent, isNumber] = m;
 
 		// MORE_REQUEST?
 		if (re.lastIndex == source.length)
-		{	const more = yield {nLine, nColumn, level, type: TokenType.MORE_REQUEST, value};
+		{	const more = yield new Token(text, TokenType.MORE_REQUEST, nLine, nColumn, level);
 			if (typeof(more)=='string' && more.length)
 			{	re.lastIndex = 0;
-				source = value + more;
+				source = text + more;
 				continue;
 			}
 		}
 
 		// number?
 		if (isNumber)
-		{	yield {nLine, nColumn, level, type: TokenType.NUMBER, value};
+		{	yield new Token(text, TokenType.NUMBER, nLine, nColumn, level);
 			regExpExpected = false;
 			// advance nColumn and nLine
-			nColumn += value.length;
+			nColumn += text.length;
 			continue;
 		}
 
-		const c = value.charCodeAt(0);
+		const c = text.charCodeAt(0);
 
 		// ident?
 		if (isIdent)
-		{	yield {nLine, nColumn, level, type: c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, value};
-			regExpExpected = value=='return' || value=='yield';
+		{	yield new Token(text, c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, nLine, nColumn, level);
+			regExpExpected = text=='return' || text=='yield';
 			// advance nColumn and nLine
-			nColumn += value.length;
+			nColumn += text.length;
 			continue;
 		}
 
 		// space?
 		if (isSpace)
-		{	yield {nLine, nColumn, level, type: TokenType.WHITESPACE, value};
+		{	yield new Token(text, TokenType.WHITESPACE, nLine, nColumn, level);
 		}
 		else
 		{	switch (c)
 			{	case C_PLUS:
 				case C_MINUS:
-				{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
-					if (value.length!=2 || value.charCodeAt(1)!=c) // unary postfix operators don't affect "regExpExpected", and prefix operators are not expected before regexp literal
+				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
+					if (text.length!=2 || text.charCodeAt(1)!=c) // unary postfix operators don't affect "regExpExpected", and prefix operators are not expected before regexp literal
 					{	regExpExpected = true;
 					}
-					nColumn += value.length;
+					nColumn += text.length;
 					continue;
 				}
 				case C_APOS:
 				case C_QUOT:
 				{	// ' or " string?
-					if (value.length == 1)
+					if (text.length == 1)
 					{	// ' or " char, that doesn't comprise string
-						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
 						{	return;
 						}
@@ -188,26 +385,26 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						continue;
 					}
 					else
-					{	yield {nLine, nColumn, level, type: TokenType.STRING, value};
+					{	yield new Token(text, TokenType.STRING, nLine, nColumn, level);
 						regExpExpected = false;
 					}
 					break;
 				}
 				case C_BACKTICK:
-				{	if (value.charCodeAt(value.length-1) == C_BACKTICK)
+				{	if (text.charCodeAt(text.length-1) == C_BACKTICK)
 					{	// complete `string` without embedded parameters
-						yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE, value};
+						yield new Token(text, TokenType.STRING_TEMPLATE, nLine, nColumn, level);
 						regExpExpected = false;
 					}
 					else if (re.lastIndex == source.length)
 					{	// ` string not terminated
-						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
 						{	return;
 						}
 					}
 					else
-					{	yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE_BEGIN, value};
+					{	yield new Token(text, TokenType.STRING_TEMPLATE_BEGIN, nLine, nColumn, level);
 						structure[level++] = Structure.STRING_TEMPLATE;
 						tplLevel++;
 						regExpExpected = true;
@@ -218,21 +415,21 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					break;
 				}
 				case C_PAREN_OPEN:
-				{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					structure[level++] = Structure.PAREN;
 					regExpExpected = true;
 					nColumn++;
 					continue;
 				}
 				case C_SQUARE_OPEN:
-				{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					structure[level++] = Structure.SQUARE;
 					regExpExpected = true;
 					nColumn++;
 					continue;
 				}
 				case C_BRACE_OPEN:
-				{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					structure[level++] = Structure.BRACE;
 					regExpExpected = true;
 					nColumn++;
@@ -240,11 +437,11 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				}
 				case C_PAREN_CLOSE:
 				{	if (structure[--level] == Structure.PAREN)
-					{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					}
 					else
 					{	level++;
-						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
 						{	return;
 						}
@@ -255,11 +452,11 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				}
 				case C_SQUARE_CLOSE:
 				{	if (structure[--level] == Structure.SQUARE)
-					{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					}
 					else
 					{	level++;
-						const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
 						{	return;
 						}
@@ -272,8 +469,8 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				{	const s = structure[--level];
 					if (s == Structure.STRING_TEMPLATE)
 					{	tplLevel--;
-						if (value.charCodeAt(value.length-1) == C_BACKTICK)
-						{	yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE_END, value};
+						if (text.charCodeAt(text.length-1) == C_BACKTICK)
+						{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
 							regExpExpected = false;
 							const {lastIndex} = re;
 							re = tplLevel==0 ? RE_TOKENIZER : RE_TOKENIZER_INSIDE_TEMPLATE;
@@ -281,13 +478,13 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						}
 						else if (re.lastIndex == source.length)
 						{	// ` string not terminated
-							const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+							const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 							if (!ignore)
 							{	return;
 							}
 						}
 						else
-						{	yield {nLine, nColumn, level, type: TokenType.STRING_TEMPLATE_MID, value};
+						{	yield new Token(text, TokenType.STRING_TEMPLATE_MID, nLine, nColumn, level);
 							level++; // reenter Structure.STRING_TEMPLATE
 							tplLevel++;
 							regExpExpected = true;
@@ -295,11 +492,11 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					else
 					{	if (s == Structure.BRACE)
-						{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+						{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 						}
 						else
 						{	level++;
-							const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+							const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 							if (!ignore)
 							{	return;
 							}
@@ -311,13 +508,14 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					break;
 				}
 				case C_SLASH:
-				{	if (value.length>1 && value.charCodeAt(1)!=C_EQ)
+				{	let c1;
+					if (text.length>1 && (c1 = text.charCodeAt(1))!=C_EQ)
 					{	// comment
-						if (tplLevel == 0)
-						{	yield {nLine, nColumn, level, type: TokenType.COMMENT, value};
+						if (tplLevel==0 && (c1!=C_TIMES || text.charCodeAt(text.length-2)==C_TIMES && text.charCodeAt(text.length-1)==C_SLASH))
+						{	yield new Token(text, TokenType.COMMENT, nLine, nColumn, level);
 						}
 						else
-						{	const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+						{	const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 							if (!ignore)
 							{	return;
 							}
@@ -392,8 +590,8 @@ L:						for (; i<iEnd; i++)
 
 						// MORE_REQUEST?
 						if (i == iEnd)
-						{	const remaining = source.slice(re.lastIndex - value.length);
-							const more = yield {nLine, nColumn, level, type: TokenType.MORE_REQUEST, value: remaining};
+						{	const remaining = source.slice(re.lastIndex - text.length);
+							const more = yield new Token(remaining, TokenType.MORE_REQUEST, nLine, nColumn, level);
 							if (typeof(more)=='string' && more.length)
 							{	source = remaining + more;
 								re.lastIndex = 0;
@@ -402,51 +600,51 @@ L:						for (; i<iEnd; i++)
 						}
 
 						if (regExpFound)
-						{	value = source.slice(re.lastIndex - value.length, i); // token includes / at the beginning, and / at the end
+						{	text = source.slice(re.lastIndex - text.length, i); // token includes / at the beginning, and / at the end
 							re.lastIndex = i; // skip the terminating /
-							yield {nLine, nColumn, level, type: TokenType.REGEXP, value};
+							yield new Token(text, TokenType.REGEXP, nLine, nColumn, level);
 							regExpExpected = false;
 						}
 						else
-						{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+						{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 							regExpExpected = true;
-							nColumn += value.length;
+							nColumn += text.length;
 							continue;
 						}
 					}
 					else
 					{	// just slash
-						yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+						yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 						regExpExpected = true;
-						nColumn += value.length;
+						nColumn += text.length;
 						continue;
 					}
 					break;
 				}
 				default:
 				{	if (c<0x20 || c>=0x7F)
-					{	const ignore = yield {nLine, nColumn, level, type: TokenType.ERROR, value};
+					{	const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
 						{	return;
 						}
 					}
 					else
-					{	yield {nLine, nColumn, level, type: TokenType.OTHER, value};
+					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
 					}
 					regExpExpected = true;
-					nColumn += value.length;
+					nColumn += text.length;
 					continue;
 				}
 			}
 		}
 
 		// advance nColumn and nLine
-		for (let i=0, iEnd=value.length; i<iEnd; i++)
-		{	const c = value.charCodeAt(i);
+		for (let i=0, iEnd=text.length; i<iEnd; i++)
+		{	const c = text.charCodeAt(i);
 			if (c == C_CR)
 			{	nLine++;
 				nColumn = 1;
-				if (value.charCodeAt(i+1) == C_LF)
+				if (text.charCodeAt(i+1) == C_LF)
 				{	i++;
 				}
 			}
@@ -464,7 +662,7 @@ L:						for (; i<iEnd; i++)
 	}
 
 	if (level != 0)
-	{	yield {nLine, nColumn, level, type: TokenType.ERROR, value: ''};
+	{	yield new Token('', TokenType.ERROR, nLine, nColumn, level);
 	}
 }
 
