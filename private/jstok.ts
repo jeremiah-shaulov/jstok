@@ -235,6 +235,12 @@ export class Token
 												c <<= 4;
 												c |= c3;
 											}
+											if (c > 0xFFFF)
+											{	c -= 0x10000;
+												c3 = 0xD800 | (c >> 10) & 0x3FF; // high surrogate
+												c = 0xDC00 | c & 0x3FF; // low surrogate
+												buffer[j++] = c3;
+											}
 										}
 										break;
 									}

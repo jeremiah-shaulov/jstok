@@ -744,8 +744,8 @@ Deno.test
 		assertEquals(token.getValue(), " String ");
 		assertEquals(token.getNumberValue(), NaN);
 
-		token = [...jstok("' String\\\r\n \\0\\1 \\0127 \\178 \\r\\n\\v\\b\\f \\x40\\xaF\\xAf \\u12AB\\uFE34\\uabcd \\u{1}\\u{a2B}'\n")][0];
-		assertEquals(token.getValue(), " String \0\x01 \n7 \x0F8 \r\n\v\b\f \x40\xaF\xAf \u12AB\uFE34\uabcd \u{1}\u{a2B}");
+		token = [...jstok("' String\\\r\n \\0\\1 \\0127 \\178 \\r\\n\\v\\b\\f \\x40\\xaF\\xAf \\u12AB\\uFE34\\uabcd \\u{1}\\u{a2B}\\u{F2345}\\u{102345}'\n")][0];
+		assertEquals(token.getValue(), " String \0\x01 \n7 \x0F8 \r\n\v\b\f \x40\xaF\xAf \u12AB\uFE34\uabcd \u{1}\u{a2B}\u{F2345}\u{102345}");
 		assertEquals(token.getNumberValue(), NaN);
 
 		token = [...jstok('` String `\n')][0];
