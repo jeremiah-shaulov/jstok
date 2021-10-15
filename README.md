@@ -5,7 +5,7 @@ Allows to iterate over tokens in code (code units).
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.2/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.3/mod.ts';
 import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
 const source =
@@ -81,7 +81,7 @@ You can ignore it, or you can react by calling the following `it.next(more)` fun
 In this case this code will be appended to the last token, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.2/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.3/mod.ts';
 
 let source =
 `	// Comment
@@ -113,7 +113,7 @@ Though in 3 cases it returns `TokenType.ERROR`: 1) if invalid character occured;
 If you react to `TokenType.ERROR` by calling `it.next(ignore)` with `true` argument, the error will be ignored, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.2/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v0.1.3/mod.ts';
 
 const source =
 `	// Comment
@@ -224,7 +224,7 @@ It will start counting lines and chars from the provided `nLine` and `nColumn` v
 If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
 
 ```ts
-import {jstokReader} from 'https://deno.land/x/jstok@v0.1.2/mod.ts';
+import {jstokReader} from 'https://deno.land/x/jstok@v0.1.3/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try
