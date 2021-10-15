@@ -683,26 +683,32 @@ Deno.test
 	{	let token = [...jstok('// Line comment ')][1]; // [0] is MORE_REQUEST
 		assertEquals(token.getValue(), ' Line comment ');
 		assertEquals(token.getNumberValue(), NaN);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('// Line comment \r')][0];
 		assertEquals(token.getValue(), ' Line comment ');
 		assertEquals(token.getNumberValue(), NaN);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('/* Comment */\n')][0];
 		assertEquals(token.getValue(), ' Comment ');
 		assertEquals(token.getNumberValue(), NaN);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('1.2e-3\r')][0];
 		assertEquals(token.getValue(), '1.2e-3');
 		assertEquals(token.getNumberValue(), 1.2e-3);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('1_2.3_4e-5_6\r')][0];
 		assertEquals(token.getValue(), '1_2.3_4e-5_6');
 		assertEquals(token.getNumberValue(), 1_2.3_4e-5_6);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('1234567890123456789012345678901234567890n\r')][0];
 		assertEquals(token.getValue(), '1234567890123456789012345678901234567890n');
 		assertEquals(token.getNumberValue(), 1234567890123456789012345678901234567890n);
+		assertEquals(token.getRegExpValue(), /(?:)/);
 
 		token = [...jstok('010\r')][0];
 		assertEquals(token.getValue(), '010');
@@ -767,5 +773,10 @@ Deno.test
 		token = [...jstok('` String `\n')][1]; // MORE_REQUEST
 		assertEquals(token.getValue(), '');
 		assertEquals(token.getNumberValue(), NaN);
+
+		token = [...jstok('/ABC/i\n')][0];
+		assertEquals(token.getValue(), '/ABC/i');
+		assertEquals(token.getNumberValue(), NaN);
+		assertEquals(token.getRegExpValue(), /ABC/i);
 	}
 );

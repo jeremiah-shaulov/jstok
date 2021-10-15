@@ -58,6 +58,7 @@ const C_O_CAP = 'O'.charCodeAt(0);
 const C_X_CAP = 'X'.charCodeAt(0);
 const C_Z_CAP = 'Z'.charCodeAt(0);
 
+const DEFAULT_REGEXP = /(?:)/;
 const RE_LINE = /[\r\n]/;
 
 const RE_STRING_TEMPLATE_STR = String.raw
@@ -70,9 +71,8 @@ const RE_TOKENIZER_STR = String.raw
 	(	0[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
 		0[Oo] (?:[0-7]+|$)  n?  |
 		0[Bb] (?:[01]+|$)  n?  |
-		(?:	[0-9] [0-9_]*
-			(?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
-						\. [0-9_]+    (?: e [+\-]? [0-9_]+ )?
+		(?:	[0-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
+		                          \. [0-9][0-9_]*    (?: e [+\-]? [0-9_]+ )?
 		)
 	)  |
 	' [^'\\\r\n]* (?:\\(?:\r\n|.|$) [^'\\\r\n]*)* (?:'|$)  |
@@ -307,6 +307,18 @@ export class Token
 			}
 			return Number(text);
 		}
+	}
+
+	/**	Returns `RegExp` object. For `TokenType.REGEXP` tokens it's the regular expression that this token represents.
+		For other token types this method returns just a default empty `RegExp` object.
+	 **/
+	getRegExpValue()
+	{	const {type, text} = this;
+		if (type != TokenType.REGEXP)
+		{	return DEFAULT_REGEXP;
+		}
+		const pos = text.lastIndexOf('/');
+		return new RegExp(text.slice(1, pos), text.slice(pos+1));
 	}
 }
 

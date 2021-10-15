@@ -151,6 +151,7 @@ class Token
 	toString(): string;
 	getValue(): string;
 	getNumberValue(): number | bigint;
+	getRegExpValue(): RegExp;
 }
 ```
 
@@ -169,6 +170,9 @@ class Token
 - For others, including `TokenType.NUMBER` - it's the original JavaScript token.
 
 `getNumberValue()` method returns `Number` or `BigInt` value of the token for `TokenType.NUMBER` tokens. For others returns `NaN`.
+
+`getRegExpValue()` method returns `RegExp` object. For `TokenType.REGEXP` tokens it's the regular expression that this token represents.
+For other token types this method returns just a default empty `RegExp` object.
 
 ## TokenType
 
