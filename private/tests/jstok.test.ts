@@ -718,6 +718,10 @@ Deno.test
 		assertEquals(token.getValue(), '018');
 		assertEquals(token.getNumberValue(), 18);
 
+		token = [...jstok('0.010\r')][0];
+		assertEquals(token.getValue(), '0.010');
+		assertEquals(token.getNumberValue(), 0.010);
+
 		token = [...jstok('0o10\r')][0];
 		assertEquals(token.getValue(), '0o10');
 		assertEquals(token.getNumberValue(), 0o10);

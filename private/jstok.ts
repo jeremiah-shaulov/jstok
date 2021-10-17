@@ -14,6 +14,7 @@ const C_QUOT = '"'.charCodeAt(0);
 const C_BACKTICK = '`'.charCodeAt(0);
 const C_AT = '@'.charCodeAt(0);
 const C_EQ = '='.charCodeAt(0);
+const C_DOT = '.'.charCodeAt(0);
 const C_PLUS = '+'.charCodeAt(0);
 const C_MINUS = '-'.charCodeAt(0);
 const C_TIMES = '*'.charCodeAt(0);
@@ -68,12 +69,15 @@ const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
 	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
 	[@#]? ([_$] | \p{General_Category=Letter})  (?:[_$0-9] | \p{General_Category=Letter})*  |
-	(	0[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
-		0[Oo] (?:[0-7]+|$)  n?  |
-		0[Bb] (?:[01]+|$)  n?  |
-		(?:	[0-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
-		                          \. [0-9][0-9_]*    (?: e [+\-]? [0-9_]+ )?
-		)
+	(	0
+		(?:	[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
+			[Oo] (?:[0-7]+|$)  n?  |
+			[Bb] (?:[01]+|$)  n?  |
+			\.  [0-9_]*  (?: e [+\-]? [0-9_]+ )?  |
+			[0-9_]*  n?
+		)  |
+		[1-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
+		                      \. [0-9][0-9_]*    (?: e [+\-]? [0-9_]+ )?
 	)  |
 	' [^'\\\r\n]* (?:\\(?:\r\n|.|$) [^'\\\r\n]*)* (?:'|$)  |
 	" [^"\\\r\n]* (?:\\(?:\r\n|.|$) [^"\\\r\n]*)* (?:"|$)  |
@@ -299,7 +303,7 @@ export class Token
 		{	// Number
 			if (text.charCodeAt(0) == C_ZERO)
 			{	const c1 = text.charCodeAt(1);
-				if (c1!=C_X && c1!=C_X_CAP && c1!=C_O && c1!=C_O_CAP && c1!=C_B && c1!=C_B_CAP)
+				if (c1!=C_DOT && c1!=C_X && c1!=C_X_CAP && c1!=C_O && c1!=C_O_CAP && c1!=C_B && c1!=C_B_CAP)
 				{	if (text.indexOf('8')==-1 && text.indexOf('9')==-1)
 					{	text = '0o'+text;
 					}
