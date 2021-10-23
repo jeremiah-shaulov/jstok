@@ -94,35 +94,34 @@ const enum Structure
 	STRING_TEMPLATE, // `${
 }
 
-/**	`WHITESPACE` - Any number of any whitespace characters. Multiple such token types are not generated in sequence.
-	`COMMENT` - One single-line or multiline comment, or hashbang.
-	`ATTRIBUTE` - Like `@json`.
-	`IDENT` - Can contain unicode letters. Private property names like `#flags` are also considered `IDENT`s.
-	`NUMBER` - Number.
-	`STRING` - String.
-	`STRING_TEMPLATE` - Whole backtick-string, if it has no parameters.
-	`STRING_TEMPLATE_BEGIN` - First part of a backtick-string, till it's first parameter. The contents of parameters will be tokenized separately, and returned as corresponding token types.
-	`STRING_TEMPLATE_MID` - Part of backtick-string between two parameters.
-	`STRING_TEMPLATE_END` - Last part of backtick-string.
-	`REGEXP` - Regular expression literal.
-	`OTHER` - Other tokens, like `+`, `++`, `?.`, etc.
-	`MORE_REQUEST` - Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
-	`ERROR` - This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter. If then you call `it.next(ignore)` with `true` argument, this error condition will be ignored, and the tokenization will continue.
- **/
 export const enum TokenType
-{	WHITESPACE,
+{	/** Any number of any whitespace characters. Multiple such token types are not generated in sequence. */
+	WHITESPACE,
+	/** One single-line or multiline comment, or hashbang. */
 	COMMENT,
+	/** Like `@json`. */
 	ATTRIBUTE,
+	/** Can contain unicode letters. Private property names like `#flags` are also considered `IDENT`s. */
 	IDENT,
+	/** Number. */
 	NUMBER,
+	/** String .*/
 	STRING,
+	/** Whole backtick-string, if it has no parameters. */
 	STRING_TEMPLATE,
+	/** First part of a backtick-string, till it's first parameter. The contents of parameters will be tokenized separately, and returned as corresponding token types. */
 	STRING_TEMPLATE_BEGIN,
+	/** Part of backtick-string between two parameters. */
 	STRING_TEMPLATE_MID,
+	/** Last part of backtick-string. */
 	STRING_TEMPLATE_END,
+	/** Regular expression literal. */
 	REGEXP,
+	/** Other tokens, like `+`, `++`, `?.`, etc. */
 	OTHER,
+	/** Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue. */
 	MORE_REQUEST,
+	/** This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter. If then you call `it.next(ignore)` with `true` argument, this error condition will be ignored, and the tokenization will continue. */
 	ERROR,
 }
 
@@ -719,6 +718,49 @@ export async function *jstokReader(source: Deno.Reader, tabWidth=4, nLine=1, nCo
 				}
 			}
 			yield value;
+		}
+	}
+}
+
+/**	Like `jstokReader()`, but buffers tokens in array, and yields this array periodically.
+	This is to avoid creating and awaiting Promises for each Token in the code.
+ **/
+export async function *jstokReaderArray(source: Deno.Reader, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
+{	const reader = new CharsReader(source, decoder.encoding);
+	const buffer = new Uint8Array(BUFFER_SIZE);
+	let part = await reader.readChars(buffer);
+	if (part != null)
+	{	const it = jstok(part, tabWidth, nLine, nColumn);
+		let tokensBuffer = [];
+		while (true)
+		{	let {value} = it.next();
+			if (!value)
+			{	break;
+			}
+			while (value.type == TokenType.MORE_REQUEST)
+			{	if (tokensBuffer.length)
+				{	yield tokensBuffer;
+					tokensBuffer = [];
+				}
+				part = await reader.readChars(buffer);
+				if (part != null)
+				{	value = it.next(part).value;
+					if (!value)
+					{	return; // must not happen
+					}
+				}
+				else
+				{	value = it.next().value;
+					if (!value)
+					{	return; // must not happen
+					}
+					break;
+				}
+			}
+			tokensBuffer[tokensBuffer.length] = value;
+		}
+		if (tokensBuffer.length)
+		{	yield tokensBuffer;
 		}
 	}
 }
