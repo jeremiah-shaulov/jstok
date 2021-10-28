@@ -1,4 +1,4 @@
-import { CharsReader } from "./chars_reader.ts";
+import {CharsReader} from "./chars_reader.ts";
 
 const BUFFER_SIZE = 16*1024;
 
@@ -139,9 +139,7 @@ export class Token
 		public nLine = 1,
 		public nColumn = 1,
 		public level = 0,
-	)
-	{
-	}
+	){}
 
 	/**	Returns original JavaScript token (`this.text`), except for `TokenType.MORE_REQUEST`, for which it returns empty string.
 	 **/
@@ -334,24 +332,28 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 	let level = 0;
 	let tplLevel = 0;
 	let re = RE_TOKENIZER;
-
-	re.lastIndex = 0;
+	let lastIndex = 0;
 
 	if (source.charCodeAt(0)==C_HASH && source.charCodeAt(1)==C_EXCL)
 	{	const pos = source.match(RE_LINE)?.index ?? source.length;
-		re.lastIndex = pos;
+		lastIndex = pos;
 		yield new Token(source.slice(0, pos), TokenType.COMMENT, nLine, nColumn, level);
 	}
 
 	let m;
-	while ((m = re.exec(source)))
-	{	let [text, isSpace, isIdent, isNumber] = m;
+	while (true)
+	{	re.lastIndex = lastIndex;
+		if (!(m = re.exec(source)))
+		{	break;
+		}
+		lastIndex = re.lastIndex;
+		let [text, isSpace, isIdent, isNumber] = m;
 
 		// MORE_REQUEST?
-		if (re.lastIndex == source.length)
+		if (lastIndex == source.length)
 		{	const more = yield new Token(text, TokenType.MORE_REQUEST, nLine, nColumn, level);
 			if (typeof(more)=='string' && more.length)
-			{	re.lastIndex = 0;
+			{	lastIndex = 0;
 				source = text + more;
 				continue;
 			}
@@ -416,7 +418,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						yield new Token(text, TokenType.STRING_TEMPLATE, nLine, nColumn, level);
 						regExpExpected = false;
 					}
-					else if (re.lastIndex == source.length)
+					else if (lastIndex == source.length)
 					{	// ` string not terminated
 						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						if (!ignore)
@@ -428,9 +430,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						structure[level++] = Structure.STRING_TEMPLATE;
 						tplLevel++;
 						regExpExpected = true;
-						const {lastIndex} = re;
 						re = RE_TOKENIZER_INSIDE_TEMPLATE;
-						re.lastIndex = lastIndex;
 					}
 					break;
 				}
@@ -492,11 +492,9 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						if (text.charCodeAt(text.length-1) == C_BACKTICK)
 						{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
 							regExpExpected = false;
-							const {lastIndex} = re;
 							re = tplLevel==0 ? RE_TOKENIZER : RE_TOKENIZER_INSIDE_TEMPLATE;
-							re.lastIndex = lastIndex;
 						}
-						else if (re.lastIndex == source.length)
+						else if (lastIndex == source.length)
 						{	// ` string not terminated
 							const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 							if (!ignore)
@@ -544,7 +542,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					// regexp or TokenType.OTHER that starts with slash
 					else if (regExpExpected)
 					{	// regexp?
-						let i = re.lastIndex;
+						let i = lastIndex;
 						const iEnd = source.length;
 						let regExpFound = false;
 						let parenLevel = 0;
@@ -610,18 +608,18 @@ L:						for (; i<iEnd; i++)
 
 						// MORE_REQUEST?
 						if (i == iEnd)
-						{	const remaining = source.slice(re.lastIndex - text.length);
+						{	const remaining = source.slice(lastIndex - text.length);
 							const more = yield new Token(remaining, TokenType.MORE_REQUEST, nLine, nColumn, level);
 							if (typeof(more)=='string' && more.length)
 							{	source = remaining + more;
-								re.lastIndex = 0;
+								lastIndex = 0;
 								continue;
 							}
 						}
 
 						if (regExpFound)
-						{	text = source.slice(re.lastIndex - text.length, i); // token includes / at the beginning, and / at the end
-							re.lastIndex = i; // skip the terminating /
+						{	text = source.slice(lastIndex - text.length, i); // token includes / at the beginning, and / at the end
+							lastIndex = i; // skip the terminating /
 							yield new Token(text, TokenType.REGEXP, nLine, nColumn, level);
 							regExpExpected = false;
 						}

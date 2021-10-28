@@ -1,4 +1,4 @@
-import {jstok, jstokReader, jstokReaderArray, TokenType} from '../jstok.ts';
+import {jstok, jstokReader, jstokReaderArray, Token, TokenType} from '../jstok.ts';
 import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
 class StringReader
@@ -394,6 +394,53 @@ Deno.test
 		assertEquals(tokens.join(''), source);
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, text: "L0"},
+				{nLine: 1, nColumn: 3,  level: 0, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 4,  level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 6,  level: 1, type: TokenType.OTHER, text: "("},
+				{nLine: 1, nColumn: 7,  level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 9,  level: 1, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 10, level: 1, type: TokenType.OTHER, text: "["},
+				{nLine: 1, nColumn: 11, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 13, level: 1, type: TokenType.OTHER, text: "]"},
+				{nLine: 1, nColumn: 14, level: 1, type: TokenType.OTHER, text: "{"},
+				{nLine: 1, nColumn: 15, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 17, level: 2, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`L2${"},
+				{nLine: 1, nColumn: 22, level: 3, type: TokenType.IDENT, text: "L3"},
+				{nLine: 1, nColumn: 24, level: 2, type: TokenType.STRING_TEMPLATE_END, text: "}L2`"},
+				{nLine: 1, nColumn: 28, level: 2, type: TokenType.IDENT, text: "L2"},
+				{nLine: 1, nColumn: 30, level: 1, type: TokenType.OTHER, text: "}"},
+				{nLine: 1, nColumn: 31, level: 1, type: TokenType.IDENT, text: "L1"},
+				{nLine: 1, nColumn: 33, level: 0, type: TokenType.OTHER, text: ")"},
+				{nLine: 1, nColumn: 34, level: 0, type: TokenType.MORE_REQUEST, text: "L0"},
+				{nLine: 1, nColumn: 34, level: 0, type: TokenType.IDENT, text: "L0"},
+			]
+		);
+	}
+);
+
+Deno.test
+(	'Parallel',
+	() =>
+	{	const source = 'L0(L1(L2)[L2]{L2`L2${L3}L2`L2}L1)L0';
+		const it1 = jstok(source);
+		const it2 = jstok(source);
+		const tokens1: Token[] = [];
+		const tokens2: Token[] = [];
+		for (let done=0; done!=3;)
+		{	const which = Math.random() > 0.5;
+			const token = (which ? it1 : it2).next().value;
+			if (!token)
+			{	done |= which ? 1 : 2;
+			}
+			else
+			{	(which ? tokens1 : tokens2).push(token);
+			}
+		}
+		assertEquals(tokens1, tokens2);
+		assertEquals(tokens1.join(''), source);
+		assertEquals
+		(	tokens1.map(v => Object.assign({}, v)),
 			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.IDENT, text: "L0"},
 				{nLine: 1, nColumn: 3,  level: 0, type: TokenType.OTHER, text: "("},
 				{nLine: 1, nColumn: 4,  level: 1, type: TokenType.IDENT, text: "L1"},
