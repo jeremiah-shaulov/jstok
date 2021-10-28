@@ -62,6 +62,8 @@ const C_Z_CAP = 'Z'.charCodeAt(0);
 const DEFAULT_REGEXP = /(?:)/;
 const RE_LINE = /[\r\n]/;
 
+const PADDER = '                                ';
+
 const RE_STRING_TEMPLATE_STR = String.raw
 `	(?: [^${'`'}\\$] | [$](?!\{) )*  (?:\\(?:.|$) (?: [^${'`'}\\$] | [$](?!\{) )* )* (?:${'`'} | [$]\{)?
 `;
@@ -145,6 +147,27 @@ export class Token
 	 **/
 	toString()
 	{	return this.type==TokenType.MORE_REQUEST ? '' : this.text;
+	}
+
+	debug()
+	{	let type = '';
+		switch (this.type)
+		{	case TokenType.WHITESPACE:            type = 'TokenType.WHITESPACE,           '; break;
+			case TokenType.COMMENT:               type = 'TokenType.COMMENT,              '; break;
+			case TokenType.ATTRIBUTE:             type = 'TokenType.ATTRIBUTE,            '; break;
+			case TokenType.IDENT:                 type = 'TokenType.IDENT,                '; break;
+			case TokenType.NUMBER:                type = 'TokenType.NUMBER,               '; break;
+			case TokenType.STRING:                type = 'TokenType.STRING,               '; break;
+			case TokenType.STRING_TEMPLATE:       type = 'TokenType.STRING_TEMPLATE,      '; break;
+			case TokenType.STRING_TEMPLATE_BEGIN: type = 'TokenType.STRING_TEMPLATE_BEGIN,'; break;
+			case TokenType.STRING_TEMPLATE_MID:   type = 'TokenType.STRING_TEMPLATE_MID,  '; break;
+			case TokenType.STRING_TEMPLATE_END:   type = 'TokenType.STRING_TEMPLATE_END,  '; break;
+			case TokenType.REGEXP:                type = 'TokenType.REGEXP,               '; break;
+			case TokenType.OTHER:                 type = 'TokenType.OTHER,                '; break;
+			case TokenType.MORE_REQUEST:          type = 'TokenType.MORE_REQUEST,         '; break;
+			case TokenType.ERROR:                 type = 'TokenType.ERROR,                '; break;
+		}
+		return `{nLine: ${pad(this.nLine+',', 3)} nColumn: ${pad(this.nColumn+',', 3)} level: ${this.level}, type: ${type} text: ${JSON.stringify(this.text)}}`;
 	}
 
 	/**	Converts JavaScript token to it's JavaScript value, if it's string.
@@ -321,6 +344,10 @@ export class Token
 		const pos = text.lastIndexOf('/');
 		return new RegExp(text.slice(1, pos), text.slice(pos+1));
 	}
+}
+
+function pad(str: string, width: number)
+{	return str + PADDER.substr(0, width-str.length);
 }
 
 /**	Returns iterator over JavaScript tokens found in source code.

@@ -152,6 +152,7 @@ class Token
 	getValue(): string;
 	getNumberValue(): number | bigint;
 	getRegExpValue(): RegExp;
+	debug(): string;
 }
 ```
 
@@ -173,6 +174,8 @@ class Token
 
 `getRegExpValue()` method returns `RegExp` object. For `TokenType.REGEXP` tokens it's the regular expression that this token represents.
 For other token types this method returns just a default empty `RegExp` object.
+
+`debug()` method returns string with console.log()-ready representation of this Token object.
 
 ## TokenType
 
