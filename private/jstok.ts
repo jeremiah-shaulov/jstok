@@ -353,7 +353,7 @@ function pad(str: string, width: number)
 /**	Returns iterator over JavaScript tokens found in source code.
 	`nLine` and `nColumn` - will start counting lines from these initial values.
  **/
-export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|boolean|undefined>
+export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|undefined>
 {	let regExpExpected = true;
 	const structure: Structure[] = [];
 	let level = 0;
@@ -426,10 +426,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				{	// ' or " string?
 					if (text.length == 1)
 					{	// ' or " char, that doesn't comprise string
-						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						if (!ignore)
-						{	return;
-						}
+						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						nColumn++;
 						continue;
 					}
@@ -447,10 +444,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					else if (lastIndex == source.length)
 					{	// ` string not terminated
-						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						if (!ignore)
-						{	return;
-						}
+						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 					}
 					else
 					{	yield new Token(text, TokenType.STRING_TEMPLATE_BEGIN, nLine, nColumn, level);
@@ -488,10 +482,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					else
 					{	level++;
-						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						if (!ignore)
-						{	return;
-						}
+						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 					}
 					regExpExpected = false;
 					nColumn++;
@@ -503,10 +494,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					else
 					{	level++;
-						const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						if (!ignore)
-						{	return;
-						}
+						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 					}
 					regExpExpected = false;
 					nColumn++;
@@ -523,10 +511,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						}
 						else if (lastIndex == source.length)
 						{	// ` string not terminated
-							const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-							if (!ignore)
-							{	return;
-							}
+							yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						}
 						else
 						{	yield new Token(text, TokenType.STRING_TEMPLATE_MID, nLine, nColumn, level);
@@ -541,10 +526,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						}
 						else
 						{	level++;
-							const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-							if (!ignore)
-							{	return;
-							}
+							yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						}
 						regExpExpected = false;
 						nColumn++;
@@ -560,10 +542,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						{	yield new Token(text, TokenType.COMMENT, nLine, nColumn, level);
 						}
 						else
-						{	const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-							if (!ignore)
-							{	return;
-							}
+						{	yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 						}
 					}
 					// regexp or TokenType.OTHER that starts with slash
@@ -668,10 +647,7 @@ L:						for (; i<iEnd; i++)
 				}
 				default:
 				{	if (c<0x20 || c>=0x7F)
-					{	const ignore = yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						if (!ignore)
-						{	return;
-						}
+					{	yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 					}
 					else
 					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);

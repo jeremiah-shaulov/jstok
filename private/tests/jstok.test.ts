@@ -569,10 +569,12 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
-				{nLine: 1, nColumn: 6, level: 1, type: TokenType.ERROR, text: "]"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "L0"},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "("},
+				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.IDENT,                 text: "L1"},
+				{nLine: 1,  nColumn: 6,  level: 1, type: TokenType.ERROR,                 text: "]"},
+				{nLine: 1,  nColumn: 7,  level: 1, type: TokenType.MORE_REQUEST,          text: ")"},
+				{nLine: 1,  nColumn: 7,  level: 0, type: TokenType.OTHER,                 text: ")"},
 			]
 		);
 		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
@@ -595,9 +597,12 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.WHITESPACE, text: " "},
-				{nLine: 1, nColumn: 5, level: 1, type: TokenType.ERROR, text: "/*hello*/"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
+				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 5,  level: 1, type: TokenType.ERROR,                 text: "/*hello*/"},
+				{nLine: 1,  nColumn: 14, level: 1, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 15, level: 1, type: TokenType.MORE_REQUEST,          text: "}`"},
+				{nLine: 1,  nColumn: 15, level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
 			]
 		);
 		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
@@ -617,42 +622,15 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.ERROR,                 text: '"'},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
+				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: ">"},
+				{nLine: 1,  nColumn: 6,  level: 0, type: TokenType.WHITESPACE,            text: "\n"},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.MORE_REQUEST,          text: '"'},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.ERROR,                 text: '"'},
 			]
 		);
 		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
-
-		{	source = '"\t>\n"';
-			tokens = [];
-			const ignored = [];
-			const it = jstok(source);
-			let token;
-L:			while ((token = it.next().value))
-			{	while (token.type == TokenType.ERROR)
-				{	ignored.push(token);
-					token = it.next(true).value;
-					if (!token)
-					{	break L;
-					}
-				}
-
-				tokens.push(token);
-			}
-			assertEquals
-			(	tokens.map(v => Object.assign({}, v)),
-				[	{nLine: 1, nColumn: 2, level: 0, type: TokenType.WHITESPACE, text: "\t"},
-					{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, text: ">"},
-					{nLine: 1, nColumn: 6, level: 0, type: TokenType.WHITESPACE, text: "\n"},
-					{nLine: 2, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, text: '"'},
-				]
-			);
-			assertEquals
-			(	ignored.map(v => Object.assign({}, v)),
-				[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
-					{nLine: 2, nColumn: 1, level: 0, type: TokenType.ERROR, text: '"'},
-				]
-			);
-		}
 
 		source = '`\t>';
 		tokens = [...jstok(source)];
@@ -683,9 +661,9 @@ Deno.test
 		let tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/^{/"},
-				{nLine: 1, nColumn: 5, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
-				{nLine: 1, nColumn: 5, level: 0, type: TokenType.OTHER, text: ";"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.REGEXP,                text: "/^{/"},
+				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: ";"},
 			]
 		);
 		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
@@ -694,8 +672,11 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, text: ")"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.ERROR,                 text: ")"},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.OTHER,                 text: ";"},
 			]
 		);
 
@@ -703,12 +684,12 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.IDENT, text: "a"},
-				{nLine: 1, nColumn: 3, level: 0, type: TokenType.WHITESPACE, text: "\r"},
-				{nLine: 2, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 2, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: ";"},
-				{nLine: 2, nColumn: 2, level: 0, type: TokenType.OTHER, text: ";"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.IDENT,                 text: "a"},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.WHITESPACE,            text: "\r"},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 2,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 2,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: ";"},
 			]
 		);
 
@@ -716,14 +697,14 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "["},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.WHITESPACE, text: "\r"},
-				{nLine: 2, nColumn: 1, level: 1, type: TokenType.MORE_REQUEST, text: "/;"},
-				{nLine: 2, nColumn: 1, level: 1, type: TokenType.OTHER, text: "/"},
-				{nLine: 2, nColumn: 2, level: 1, type: TokenType.MORE_REQUEST, text: ";"},
-				{nLine: 2, nColumn: 2, level: 1, type: TokenType.OTHER, text: ";"},
-				{nLine: 2, nColumn: 3, level: 1, type: TokenType.ERROR, text: ""},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "["},
+				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.WHITESPACE,            text: "\r"},
+				{nLine: 2,  nColumn: 1,  level: 1, type: TokenType.MORE_REQUEST,          text: "/;"},
+				{nLine: 2,  nColumn: 1,  level: 1, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 2,  nColumn: 2,  level: 1, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 2,  nColumn: 2,  level: 1, type: TokenType.OTHER,                 text: ";"},
+				{nLine: 2,  nColumn: 3,  level: 1, type: TokenType.ERROR,                 text: ""},
 			]
 		);
 
@@ -731,10 +712,10 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: "["},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "["},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.ERROR, text: ""},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: "["},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "["},
+				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.ERROR,                 text: ""},
 			]
 		);
 
@@ -742,11 +723,11 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "/"},
-				{nLine: 1, nColumn: 2, level: 0, type: TokenType.OTHER, text: "{"},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.MORE_REQUEST, text: "a"},
-				{nLine: 1, nColumn: 3, level: 1, type: TokenType.IDENT, text: "a"},
-				{nLine: 1, nColumn: 4, level: 1, type: TokenType.ERROR, text: ""},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "{"},
+				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.MORE_REQUEST,          text: "a"},
+				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.IDENT,                 text: "a"},
+				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.ERROR,                 text: ""},
 			]
 		);
 	}

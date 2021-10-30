@@ -110,31 +110,6 @@ L:while ((token = it.next().value))
 
 This library cannot be used to check source code syntax.
 Though in 3 cases it returns `TokenType.ERROR`: 1) if invalid character occured; 2) if unbalanced bracket occured; 3) if occured comment inside string template parameter.
-If you react to `TokenType.ERROR` by calling `it.next(ignore)` with `true` argument, the error will be ignored, and the tokenization process will continue.
-
-```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.0.0/mod.ts';
-
-const source =
-`	// Comment
-	}
-	console.log(\`Current time: \${new Date}\`);
-`;
-
-const it = jstok(source);
-let token;
-L:while ((token = it.next().value))
-{	while (token.type == TokenType.ERROR)
-	{	console.log('Ignored wrong token:', token);
-		token = it.next(true).value;
-		if (!token)
-		{	break L;
-		}
-	}
-
-	console.log(token);
-}
-```
 
 ## Token
 
