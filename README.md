@@ -5,7 +5,7 @@ Allows to iterate over tokens in code (code units).
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.0/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.1/mod.ts';
 import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
 
 const source =
@@ -81,7 +81,7 @@ You can ignore it, or you can react by calling the following `it.next(more)` fun
 In this case this code will be appended to the last token, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.0/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.1/mod.ts';
 
 let source =
 `	// Comment
@@ -152,6 +152,13 @@ For other token types this method returns just a default empty `RegExp` object.
 
 `debug()` method returns string with console.log()-ready representation of this Token object.
 
+```ts
+import {jstok} from 'https://deno.land/x/jstok@v1.1.1/mod.ts';
+
+const tokens = [...jstok(import.meta.url)];
+console.log(tokens.map(t => t.debug()).join(',\n') + ',');
+```
+
 ## TokenType
 
 ```ts
@@ -186,7 +193,7 @@ const enum TokenType
 - `REGEXP` - Regular expression literal.
 - `OTHER` - Other tokens, like `+`, `++`, `?.`, etc.
 - `MORE_REQUEST` - Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
-- `ERROR` - This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter. If then you call `it.next(ignore)` with `true` argument, this error condition will be ignored, and the tokenization will continue.
+- `ERROR` - This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter.
 
 ## jstokReader() - Tokenize Deno.Reader
 
@@ -202,7 +209,7 @@ It will start counting lines and chars from the provided `nLine` and `nColumn` v
 If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
 
 ```ts
-import {jstokReader} from 'https://deno.land/x/jstok@v1.1.0/mod.ts';
+import {jstokReader} from 'https://deno.land/x/jstok@v1.1.1/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try
@@ -225,7 +232,7 @@ async function *jstokReaderArray(source: Deno.Reader, tabWidth=4, nLine=1, nColu
 ```
 
 ```ts
-import {jstokReaderArray} from 'https://deno.land/x/jstok@v1.1.0/mod.ts';
+import {jstokReaderArray} from 'https://deno.land/x/jstok@v1.1.1/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try
