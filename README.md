@@ -41,12 +41,12 @@ for (const token of jstok(source))
 }
 ```
 
-### jstok() - Tokenize string
+## jstok() - Tokenize string
 
 This function returns iterator over JavaScript or TypeScript tokens found in a source code provided as a string.
 
 ```ts
-function jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|boolean|undefined>;
+function jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|undefined>;
 
 class Token
 {	text: string;

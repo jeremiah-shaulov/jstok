@@ -64,8 +64,9 @@ const RE_LINE = /[\r\n]/;
 
 const PADDER = '                                ';
 
+const RE_STRING_TEMPLATE_STR_MID = String.raw`(?: [^${'`'}\\$] | [$](?!\{) )*`;
 const RE_STRING_TEMPLATE_STR = String.raw
-`	(?: [^${'`'}\\$] | [$](?!\{) )*  (?:\\(?:.|$) (?: [^${'`'}\\$] | [$](?!\{) )* )* (?:${'`'} | [$]\{)?
+`	${RE_STRING_TEMPLATE_STR_MID}  (?:\\(?:.|$) ${RE_STRING_TEMPLATE_STR_MID} )* (?:${'`'} | [$]\{)?
 `;
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
@@ -87,7 +88,7 @@ const RE_TOKENIZER_STR = String.raw
 	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | ={1,3} | !=?=? | [.](?:[.][.])?
 `;
 const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
-const RE_TOKENIZER_INSIDE_TEMPLATE = new RegExp((RE_TOKENIZER_STR + '|\\}'+RE_STRING_TEMPLATE_STR + '|.').replace(/\s+/g, ''), 'suy');
+const RE_TOKENIZER_INSIDE_TEMPLATE = new RegExp((RE_TOKENIZER_STR + '|\\}' + RE_STRING_TEMPLATE_STR + '|.').replace(/\s+/g, ''), 'suy');
 
 const enum Structure
 {	PAREN,	// (
@@ -259,7 +260,7 @@ export class Token
 												c <<= 4;
 												c |= c3;
 											}
-											if (c > 0xFFFF)
+											if (c >= 0x10000)
 											{	c -= 0x10000;
 												c3 = 0xD800 | (c >> 10) & 0x3FF; // high surrogate
 												c = 0xDC00 | c & 0x3FF; // low surrogate
@@ -347,7 +348,7 @@ export class Token
 }
 
 function pad(str: string, width: number)
-{	return str + PADDER.substr(0, width-str.length);
+{	return str + PADDER.substring(0, width-str.length);
 }
 
 /**	Returns iterator over JavaScript tokens found in source code.
@@ -361,6 +362,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 	let re = RE_TOKENIZER;
 	let lastIndex = 0;
 
+	// Shebang?
 	if (source.charCodeAt(0)==C_HASH && source.charCodeAt(1)==C_EXCL)
 	{	const pos = source.match(RE_LINE)?.index ?? source.length;
 		lastIndex = pos;
