@@ -5,8 +5,8 @@ Allows to iterate over tokens in code (code units).
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.2/mod.ts';
-import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
+import {assertEquals} from "https://deno.land/std@0.175.0/testing/asserts.ts";
 
 const source =
 `	// Comment
@@ -14,7 +14,7 @@ const source =
 `;
 
 assertEquals
-(	[...jstok(source)].map(v => Object.assign({}, v)),
+(	[...jstok(source)].map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 	[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.WHITESPACE, text: "\t"},
 		{nLine: 1, nColumn: 5, level: 0, type: TokenType.COMMENT, text: "// Comment"},
 		{nLine: 1, nColumn: 15, level: 0, type: TokenType.WHITESPACE, text: "\n\t"},
@@ -81,7 +81,7 @@ You can ignore it, or you can react by calling the following `it.next(more)` fun
 In this case this code will be appended to the last token, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.2/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
 
 let source =
 `	// Comment
@@ -153,7 +153,7 @@ For other token types this method returns just a default empty `RegExp` object.
 `debug()` method returns string with console.log()-ready representation of this Token object.
 
 ```ts
-import {jstok} from 'https://deno.land/x/jstok@v1.1.2/mod.ts';
+import {jstok} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
 
 const tokens = [...jstok(import.meta.url)];
 console.log(tokens.map(t => t.debug()).join(',\n') + ',');
@@ -209,7 +209,7 @@ It will start counting lines and chars from the provided `nLine` and `nColumn` v
 If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
 
 ```ts
-import {jstokReader} from 'https://deno.land/x/jstok@v1.1.2/mod.ts';
+import {jstokReader} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try
@@ -232,7 +232,7 @@ async function *jstokReaderArray(source: Deno.Reader, tabWidth=4, nLine=1, nColu
 ```
 
 ```ts
-import {jstokReaderArray} from 'https://deno.land/x/jstok@v1.1.2/mod.ts';
+import {jstokReaderArray} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 try

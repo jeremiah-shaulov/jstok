@@ -465,9 +465,31 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				continue;
 
 			case C_BRACE_CLOSE:
-				if (structure[level-1] == Structure.STRING_TEMPLATE)
+			{	const s = structure[level - 1];
+				if (s == Structure.STRING_TEMPLATE)
 				{	re = RE_STRING_TEMPLATE;
+					break;
 				}
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token('}', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = '}' + more;
+						continue;
+					}
+				}
+				if (s == Structure.BRACE)
+				{	level--;
+					yield new Token('}', TokenType.OTHER, nLine, nColumn, level);
+				}
+				else
+				{	yield new Token('}', TokenType.ERROR, nLine, nColumn, level);
+				}
+				regExpExpected = false;
+				nColumn++;
+				continue;
+			}
 		}
 
 		re.lastIndex = lastIndex;
@@ -557,34 +579,21 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				}
 
 				case C_BRACE_CLOSE:
-				{	const s = structure[--level];
-					if (s == Structure.STRING_TEMPLATE)
-					{	if (text.charCodeAt(text.length-1) == C_BACKTICK)
-						{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
-							tplLevel--;
-							regExpExpected = false;
-						}
-						else if (lastIndex == source.length)
-						{	// ` string not terminated
-							yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						}
-						else
-						{	yield new Token(text, TokenType.STRING_TEMPLATE_MID, nLine, nColumn, level);
-							level++; // reenter Structure.STRING_TEMPLATE
-							regExpExpected = true;
-						}
+				{	// assume: structure[level - 1] == Structure.STRING_TEMPLATE
+					level--;
+					if (text.charCodeAt(text.length-1) == C_BACKTICK)
+					{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
+						tplLevel--;
+						regExpExpected = false;
+					}
+					else if (lastIndex == source.length)
+					{	// ` string not terminated
+						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
 					}
 					else
-					{	if (s == Structure.BRACE)
-						{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-						}
-						else
-						{	level++;
-							yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-						}
-						regExpExpected = false;
-						nColumn++;
-						continue;
+					{	yield new Token(text, TokenType.STRING_TEMPLATE_MID, nLine, nColumn, level);
+						level++; // reenter Structure.STRING_TEMPLATE
+						regExpExpected = true;
 					}
 					break;
 				}

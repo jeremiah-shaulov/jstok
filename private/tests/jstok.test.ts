@@ -1,5 +1,5 @@
 import {jstok, jstokReader, jstokReaderArray, Token, TokenType} from '../jstok.ts';
-import {assertEquals} from "https://deno.land/std@0.106.0/testing/asserts.ts";
+import {assertEquals} from "https://deno.land/std@0.175.0/testing/asserts.ts";
 
 class StringReader
 {	private data: Uint8Array;
@@ -76,7 +76,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.COMMENT,               text: "/*Aф៘\n😀*/"},
 				{nLine: 2,  nColumn: 4,  level: 0, type: TokenType.IDENT,                 text: "Abc"},
 				{nLine: 2,  nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\r\n"},
@@ -139,7 +139,7 @@ Deno.test
 						}
 					}
 					assertEquals
-					(	tokens.map(v => Object.assign({}, v)),
+					(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 						[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.COMMENT,               text: comment},
 							{nLine: 2, nColumn: 4,  level: 0, type: TokenType.IDENT,                 text: "Abc"},
 							{nLine: 2, nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\r\n"},
@@ -189,7 +189,7 @@ Deno.test
 		{	tokens.push(token);
 		}
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/./"},
 				{nLine: 1, nColumn: 4, level: 0, type: TokenType.OTHER,  text: ";"},
 			]
@@ -210,7 +210,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.COMMENT,      text: "#!cat"},
 				{nLine: 1, nColumn: 1,  level: 0, type: TokenType.WHITESPACE,   text: "\n"},
 				{nLine: 2, nColumn: 1,  level: 0, type: TokenType.COMMENT,      text: "// Hello"},
@@ -233,7 +233,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.COMMENT, text: "#!cat /etc/passwd"}
 			]
 		);
@@ -248,7 +248,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "One"},
 				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "  "},
 				{nLine: 1,  nColumn: 6,  level: 0, type: TokenType.IDENT,                 text: "two"},
@@ -275,7 +275,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.NUMBER,                text: "0"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: "  "},
 				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.NUMBER,                text: "1.1"},
@@ -332,7 +332,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING, text: "'One \\n\\xA0\\' '"},
 				{nLine: 1, nColumn: 16, level: 0, type: TokenType.WHITESPACE, text: "\n"},
 				{nLine: 2, nColumn: 1, level: 0, type: TokenType.STRING, text: '"One \\n\\xA0\\" "' },
@@ -370,7 +370,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.REGEXP,                text: "/^text$/sig"},
 				{nLine: 1,  nColumn: 12, level: 0, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 13, level: 0, type: TokenType.OTHER,                 text: "+"},
@@ -401,7 +401,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "L0"},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "("},
 				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.IDENT,                 text: "L1"},
@@ -449,7 +449,7 @@ Deno.test
 		assertEquals(tokens1, tokens2);
 		assertEquals(tokens1.join(''), source);
 		assertEquals
-		(	tokens1.map(v => Object.assign({}, v)),
+		(	tokens1.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "L0"},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "("},
 				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.IDENT,                 text: "L1"},
@@ -482,7 +482,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "..."},
 				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.OTHER,                 text: "."},
 				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: "++"},
@@ -542,7 +542,7 @@ Deno.test
 	{	let source = `L0(`;
 		let tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
 				{nLine: 1, nColumn: 3, level: 0, type: TokenType.MORE_REQUEST, text: "("},
 				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
@@ -554,7 +554,7 @@ Deno.test
 		source = `L0(L1))`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
 				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
 				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
@@ -568,7 +568,7 @@ Deno.test
 		source = `L0(L1])`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "L0"},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "("},
 				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.IDENT,                 text: "L1"},
@@ -582,7 +582,7 @@ Deno.test
 		source = `L0(L1)}`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.IDENT, text: "L0"},
 				{nLine: 1, nColumn: 3, level: 0, type: TokenType.OTHER, text: "("},
 				{nLine: 1, nColumn: 4, level: 1, type: TokenType.IDENT, text: "L1"},
@@ -596,7 +596,7 @@ Deno.test
 		source = '`${ /*hello*/ }`';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
 				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 5,  level: 1, type: TokenType.ERROR,                 text: "/*hello*/"},
@@ -610,7 +610,7 @@ Deno.test
 		source = '-\x7F';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.OTHER, text: "-"},
 				{nLine: 1, nColumn: 2, level: 0, type: TokenType.MORE_REQUEST, text: "\x7F"},
 				{nLine: 1, nColumn: 2, level: 0, type: TokenType.ERROR, text: "\x7F"},
@@ -621,7 +621,7 @@ Deno.test
 		source = '"\t>\n"';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.ERROR,                 text: '"'},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
 				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: ">"},
@@ -635,7 +635,7 @@ Deno.test
 		source = '`\t>';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.MORE_REQUEST, text: "`\t>"},
 				{nLine: 1, nColumn: 1, level: 0, type: TokenType.ERROR, text: "`\t>"},
 			]
@@ -644,7 +644,7 @@ Deno.test
 		source = '`${1}>';
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
 				{nLine: 1, nColumn: 4, level: 1, type: TokenType.NUMBER, text: "1"},
 				{nLine: 1, nColumn: 5, level: 1, type: TokenType.MORE_REQUEST, text: "}>"},
@@ -660,7 +660,7 @@ Deno.test
 	{	let source = `/^{/;`;
 		let tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.REGEXP,                text: "/^{/"},
 				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
 				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: ";"},
@@ -671,7 +671,7 @@ Deno.test
 		source = `/)/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.ERROR,                 text: ")"},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "/"},
@@ -683,7 +683,7 @@ Deno.test
 		source = `/a\r/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.IDENT,                 text: "a"},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.WHITESPACE,            text: "\r"},
@@ -696,7 +696,7 @@ Deno.test
 		source = `/[\r/;`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "["},
 				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.WHITESPACE,            text: "\r"},
@@ -711,7 +711,7 @@ Deno.test
 		source = `/[`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: "["},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "["},
@@ -722,7 +722,7 @@ Deno.test
 		source = `/{a`;
 		tokens = [...jstok(source)];
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "{"},
 				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.MORE_REQUEST,          text: "a"},
@@ -853,7 +853,7 @@ Deno.test
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
@@ -883,7 +883,7 @@ Deno.test
 		let tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
@@ -909,7 +909,7 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
-		(	tokens.map(v => Object.assign({}, v)),
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
