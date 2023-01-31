@@ -840,3 +840,90 @@ Deno.test
 		assertEquals(token.getRegExpValue(), /ABC/i);
 	}
 );
+
+Deno.test
+(	'String templates with braces',
+	() =>
+	{	const source = normalizeIndent
+		(	`	a =
+				\`	\${{}}
+				\`;
+			`
+		);
+		const tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
+		assertEquals
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
+				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "\n"},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t${"},
+				{nLine: 2,  nColumn: 7,  level: 1, type: TokenType.OTHER,                 text: "{"},
+				{nLine: 2,  nColumn: 8,  level: 1, type: TokenType.OTHER,                 text: "}"},
+				{nLine: 2,  nColumn: 9,  level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}\n`"},
+				{nLine: 3,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 3,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: ";"}
+			]
+		);
+	}
+);
+
+Deno.test
+(	'Nested string templates',
+	() =>
+	{	let source = normalizeIndent
+		(	`	a =
+				\`	\${
+						\`Hello\`
+					}
+				\`;
+			`
+		);
+		let tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
+		assertEquals
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
+				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "\n"},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t${"},
+				{nLine: 2,  nColumn: 7,  level: 1, type: TokenType.WHITESPACE,            text: "\n\t\t"},
+				{nLine: 3,  nColumn: 9,  level: 1, type: TokenType.STRING_TEMPLATE,       text: "`Hello`"},
+				{nLine: 3,  nColumn: 16, level: 1, type: TokenType.WHITESPACE,            text: "\n\t"},
+				{nLine: 4,  nColumn: 5,  level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}\n`"},
+				{nLine: 5,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 5,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: ";"}
+			]
+		);
+
+		source = normalizeIndent
+		(	`	a =
+				\`	\${
+						\`Hello \${'all'}\`
+					}
+				\`;
+			`
+		);
+		tokens = [...jstok(source)];
+		assertEquals(tokens.join(''), source);
+		assertEquals
+		(	tokens.map(v => Object.assign({}, v)),
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.IDENT,                 text: "a"},
+				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: "="},
+				{nLine: 1,  nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "\n"},
+				{nLine: 2,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t${"},
+				{nLine: 2,  nColumn: 7,  level: 1, type: TokenType.WHITESPACE,            text: "\n\t\t"},
+				{nLine: 3,  nColumn: 9,  level: 1, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`Hello ${"},
+				{nLine: 3,  nColumn: 18, level: 2, type: TokenType.STRING,                text: "'all'"},
+				{nLine: 3,  nColumn: 23, level: 1, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
+				{nLine: 3,  nColumn: 25, level: 1, type: TokenType.WHITESPACE,            text: "\n\t"},
+				{nLine: 4,  nColumn: 5,  level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}\n`"},
+				{nLine: 5,  nColumn: 2,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
+				{nLine: 5,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: ";"}
+			]
+		);
+	}
+);

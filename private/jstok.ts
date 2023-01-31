@@ -68,6 +68,7 @@ const RE_STRING_TEMPLATE_STR_MID = String.raw`(?: [^${'`'}\\$] | [$](?!\{) )*`;
 const RE_STRING_TEMPLATE_STR = String.raw
 `	${RE_STRING_TEMPLATE_STR_MID}  (?:\\(?:.|$) ${RE_STRING_TEMPLATE_STR_MID} )* (?:${'`'} | [$]\{)?
 `;
+const RE_STRING_TEMPLATE = new RegExp(RE_STRING_TEMPLATE_STR.replace(/\s+/g, ''), 'suy');
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
 	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
@@ -88,7 +89,6 @@ const RE_TOKENIZER_STR = String.raw
 	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | ={1,3} | !=?=? | [.](?:[.][.])?
 `;
 const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
-const RE_TOKENIZER_INSIDE_TEMPLATE = new RegExp((RE_TOKENIZER_STR + '|\\}' + RE_STRING_TEMPLATE_STR + '|.').replace(/\s+/g, ''), 'suy');
 
 const enum Structure
 {	PAREN,	// (
@@ -359,7 +359,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 	const structure: Structure[] = [];
 	let level = 0;
 	let tplLevel = 0;
-	let re = RE_TOKENIZER;
 	let lastIndex = 0;
 
 	// Shebang?
@@ -371,7 +370,107 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 
 	let m;
 	while (true)
-	{	re.lastIndex = lastIndex;
+	{	let re = RE_TOKENIZER;
+		const c = source.charCodeAt(lastIndex);
+
+		switch (c)
+		{	case C_PAREN_OPEN:
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token('(', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = '(' + more;
+						continue;
+					}
+				}
+				yield new Token('(', TokenType.OTHER, nLine, nColumn, level);
+				structure[level++] = Structure.PAREN;
+				regExpExpected = true;
+				nColumn++;
+				continue;
+
+			case C_SQUARE_OPEN:
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token('[', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = '[' + more;
+						continue;
+					}
+				}
+				yield new Token('[', TokenType.OTHER, nLine, nColumn, level);
+				structure[level++] = Structure.SQUARE;
+				regExpExpected = true;
+				nColumn++;
+				continue;
+
+			case C_BRACE_OPEN:
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token('{', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = '{' + more;
+						continue;
+					}
+				}
+				yield new Token('{', TokenType.OTHER, nLine, nColumn, level);
+				structure[level++] = Structure.BRACE;
+				regExpExpected = true;
+				nColumn++;
+				continue;
+
+			case C_PAREN_CLOSE:
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token(')', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = ')' + more;
+						continue;
+					}
+				}
+				if (structure[--level] == Structure.PAREN)
+				{	yield new Token(')', TokenType.OTHER, nLine, nColumn, level);
+				}
+				else
+				{	level++;
+					yield new Token(')', TokenType.ERROR, nLine, nColumn, level);
+				}
+				regExpExpected = false;
+				nColumn++;
+				continue;
+
+			case C_SQUARE_CLOSE:
+				// MORE_REQUEST?
+				if (++lastIndex == source.length)
+				{	const more = yield new Token(']', TokenType.MORE_REQUEST, nLine, nColumn, level);
+					if (typeof(more)=='string' && more.length)
+					{	lastIndex = 0;
+						source = ']' + more;
+						continue;
+					}
+				}
+				if (structure[--level] == Structure.SQUARE)
+				{	yield new Token(']', TokenType.OTHER, nLine, nColumn, level);
+				}
+				else
+				{	level++;
+					yield new Token(']', TokenType.ERROR, nLine, nColumn, level);
+				}
+				regExpExpected = false;
+				nColumn++;
+				continue;
+
+			case C_BRACE_CLOSE:
+				if (structure[level-1] == Structure.STRING_TEMPLATE)
+				{	re = RE_STRING_TEMPLATE;
+				}
+		}
+
+		re.lastIndex = lastIndex;
 		if (!(m = re.exec(source)))
 		{	break;
 		}
@@ -397,8 +496,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 			continue;
 		}
 
-		const c = text.charCodeAt(0);
-
 		// ident?
 		if (isIdent)
 		{	yield new Token(text, c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, nLine, nColumn, level);
@@ -423,6 +520,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					nColumn += text.length;
 					continue;
 				}
+
 				case C_APOS:
 				case C_QUOT:
 				{	// ' or " string?
@@ -438,6 +536,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					break;
 				}
+
 				case C_BACKTICK:
 				{	if (text.charCodeAt(text.length-1) == C_BACKTICK)
 					{	// complete `string` without embedded parameters
@@ -453,63 +552,17 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						structure[level++] = Structure.STRING_TEMPLATE;
 						tplLevel++;
 						regExpExpected = true;
-						re = RE_TOKENIZER_INSIDE_TEMPLATE;
 					}
 					break;
 				}
-				case C_PAREN_OPEN:
-				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-					structure[level++] = Structure.PAREN;
-					regExpExpected = true;
-					nColumn++;
-					continue;
-				}
-				case C_SQUARE_OPEN:
-				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-					structure[level++] = Structure.SQUARE;
-					regExpExpected = true;
-					nColumn++;
-					continue;
-				}
-				case C_BRACE_OPEN:
-				{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-					structure[level++] = Structure.BRACE;
-					regExpExpected = true;
-					nColumn++;
-					continue;
-				}
-				case C_PAREN_CLOSE:
-				{	if (structure[--level] == Structure.PAREN)
-					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-					}
-					else
-					{	level++;
-						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-					}
-					regExpExpected = false;
-					nColumn++;
-					continue;
-				}
-				case C_SQUARE_CLOSE:
-				{	if (structure[--level] == Structure.SQUARE)
-					{	yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
-					}
-					else
-					{	level++;
-						yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
-					}
-					regExpExpected = false;
-					nColumn++;
-					continue;
-				}
+
 				case C_BRACE_CLOSE:
 				{	const s = structure[--level];
 					if (s == Structure.STRING_TEMPLATE)
-					{	tplLevel--;
-						if (text.charCodeAt(text.length-1) == C_BACKTICK)
+					{	if (text.charCodeAt(text.length-1) == C_BACKTICK)
 						{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
+							tplLevel--;
 							regExpExpected = false;
-							re = tplLevel==0 ? RE_TOKENIZER : RE_TOKENIZER_INSIDE_TEMPLATE;
 						}
 						else if (lastIndex == source.length)
 						{	// ` string not terminated
@@ -518,7 +571,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						else
 						{	yield new Token(text, TokenType.STRING_TEMPLATE_MID, nLine, nColumn, level);
 							level++; // reenter Structure.STRING_TEMPLATE
-							tplLevel++;
 							regExpExpected = true;
 						}
 					}
@@ -536,6 +588,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					}
 					break;
 				}
+
 				case C_SLASH:
 				{	let c1;
 					if (text.length>1 && (c1 = text.charCodeAt(1))!=C_EQ)
@@ -647,6 +700,7 @@ L:						for (; i<iEnd; i++)
 					}
 					break;
 				}
+
 				default:
 				{	if (c<0x20 || c>=0x7F)
 					{	yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
