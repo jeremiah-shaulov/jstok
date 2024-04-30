@@ -358,7 +358,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 {	let regExpExpected = true;
 	const structure: Structure[] = [];
 	let level = 0;
-	let tplLevel = 0;
 	let lastIndex = 0;
 
 	// Shebang?
@@ -572,7 +571,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					else
 					{	yield new Token(text, TokenType.STRING_TEMPLATE_BEGIN, nLine, nColumn, level);
 						structure[level++] = Structure.STRING_TEMPLATE;
-						tplLevel++;
 						regExpExpected = true;
 					}
 					break;
@@ -583,7 +581,6 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 					level--;
 					if (text.charCodeAt(text.length-1) == C_BACKTICK)
 					{	yield new Token(text, TokenType.STRING_TEMPLATE_END, nLine, nColumn, level);
-						tplLevel--;
 						regExpExpected = false;
 					}
 					else if (lastIndex == source.length)
@@ -602,7 +599,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				{	let c1;
 					if (text.length>1 && (c1 = text.charCodeAt(1))!=C_EQ)
 					{	// comment
-						if (tplLevel==0 && (c1!=C_TIMES || text.charCodeAt(text.length-2)==C_TIMES && text.charCodeAt(text.length-1)==C_SLASH))
+						if (c1!=C_TIMES || text.charCodeAt(text.length-2)==C_TIMES && text.charCodeAt(text.length-1)==C_SLASH)
 						{	yield new Token(text, TokenType.COMMENT, nLine, nColumn, level);
 						}
 						else

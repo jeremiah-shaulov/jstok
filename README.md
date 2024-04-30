@@ -193,7 +193,7 @@ const enum TokenType
 - `REGEXP` - Regular expression literal.
 - `OTHER` - Other tokens, like `+`, `++`, `?.`, etc.
 - `MORE_REQUEST` - Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
-- `ERROR` - This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter.
+- `ERROR` - This token type is returned in 2 situations: 1) invalid character occured; 2) unbalanced bracket occured.
 
 ## jstokReader() - Tokenize Deno.Reader
 

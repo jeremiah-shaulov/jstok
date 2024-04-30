@@ -593,20 +593,6 @@ Deno.test
 		);
 		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
 
-		source = '`${ /*hello*/ }`';
-		tokens = [...jstok(source)];
-		assertEquals
-		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
-			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
-				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.WHITESPACE,            text: " "},
-				{nLine: 1,  nColumn: 5,  level: 1, type: TokenType.ERROR,                 text: "/*hello*/"},
-				{nLine: 1,  nColumn: 14, level: 1, type: TokenType.WHITESPACE,            text: " "},
-				{nLine: 1,  nColumn: 15, level: 1, type: TokenType.MORE_REQUEST,          text: "}`"},
-				{nLine: 1,  nColumn: 15, level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
-			]
-		);
-		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
-
 		source = '-\x7F';
 		tokens = [...jstok(source)];
 		assertEquals
@@ -866,6 +852,25 @@ Deno.test
 				{nLine: 3,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: ";"}
 			]
 		);
+	}
+);
+
+Deno.test
+(	'String templates with comments',
+	() =>
+	{	const source = '`${ /*hello*/ }`';
+		const tokens = [...jstok(source)];
+		assertEquals
+		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`${"},
+				{nLine: 1,  nColumn: 4,  level: 1, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 5,  level: 1, type: TokenType.COMMENT,               text: "/*hello*/"},
+				{nLine: 1,  nColumn: 14, level: 1, type: TokenType.WHITESPACE,            text: " "},
+				{nLine: 1,  nColumn: 15, level: 1, type: TokenType.MORE_REQUEST,          text: "}`"},
+				{nLine: 1,  nColumn: 15, level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
+			]
+		);
+		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
 	}
 );
 
