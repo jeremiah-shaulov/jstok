@@ -1,37 +1,56 @@
-import {jstok, jstokReader, jstokReaderArray, Token, TokenType} from '../jstok.ts';
-import {assertEquals} from "https://deno.land/std@0.175.0/testing/asserts.ts";
+import {jstok, jstokStream, Token, TokenType} from '../../mod.ts';
+import {assertEquals} from 'https://deno.land/std@0.224.0/assert/assert_equals.ts';
+import { jstokStreamArray } from '../jstok_stream.ts';
 
-class StringReader
-{	private data: Uint8Array;
-	private pos = 0;
-	private state = 0;
+function stringReader(str: string, isByob=false, chunkSize=10, encoding='utf-8')
+{	let data: Uint8Array;
+	let pos = 0;
 
-	constructor(str: string, private chunkSize=10, encoding='utf-8')
-	{	if (encoding == 'utf-16le')
-		{	this.data = encodeToUtf16(str, true);
-		}
-		else if (encoding == 'utf-16be')
-		{	this.data = encodeToUtf16(str, false);
-		}
-		else
-		{	this.data = new TextEncoder().encode(str);
-		}
+	if (encoding == 'utf-16le')
+	{	data = encodeToUtf16(str, true);
+	}
+	else if (encoding == 'utf-16be')
+	{	data = encodeToUtf16(str, false);
+	}
+	else
+	{	data = new TextEncoder().encode(str);
 	}
 
-	read(buffer: Uint8Array)
-	{	let result: number|null = null;
-		if (this.pos < this.data.length)
-		{	if (this.state++ % 10 == 0)
-			{	result = 0;
+	if (!isByob)
+	{	return new ReadableStream
+		(	{	pull(controller)
+				{	const chunk = data.subarray(pos, pos+Math.min(chunkSize, data.length-pos));
+					pos += chunk.length;
+					controller.enqueue(chunk);
+					if (pos >= data.length)
+					{	controller.close();
+					}
+				}
 			}
-			else
-			{	const chunk = this.data.subarray(this.pos, this.pos+Math.min(this.chunkSize, this.data.length-this.pos, buffer.length));
-				buffer.set(chunk, 0);
-				this.pos += chunk.length;
-				result = chunk.length;
+		);
+	}
+	else
+	{	return new ReadableStream
+		(	{	type: 'bytes',
+				pull(controller)
+				{	const view = controller.byobRequest?.view;
+					if (!view)
+					{	const chunk = data.subarray(pos, pos+Math.min(chunkSize, data.length-pos));
+						pos += chunk.length;
+						controller.enqueue(chunk);
+					}
+					else
+					{	const chunk = data.subarray(pos, pos+Math.min(chunkSize, data.length-pos, view.byteLength));
+						pos += chunk.length;
+						new Uint8Array(view.buffer, view.byteOffset, view.byteLength).set(chunk, 0);
+						controller.byobRequest.respond(chunk.length);
+					}
+					if (pos >= data.length)
+					{	controller.close();
+					}
+				}
 			}
-		}
-		return Promise.resolve(result);
+		);
 	}
 }
 
@@ -117,63 +136,65 @@ Deno.test
 );
 
 Deno.test
-(	'Reader',
+(	'Stream',
 	async () =>
 	{	for (const encoding of ['utf-8', 'utf-16le', 'utf-16be', 'windows-1252'])
 		{	for (let chunkSize=1; chunkSize<90; chunkSize++)
 			{	for (const isArray of [false, true])
-				{	const comment = encoding=='windows-1252' ? `/*A B\nC*/` : `/*Aф៘\n😀*/`;
-					const string = encoding=='windows-1252' ? '"A"' : '"😀"';
-					const source = new StringReader(`${comment}Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; ${string};`, chunkSize, encoding);
-					const tokens = [];
-					if (!isArray)
-					{	for await (const token of jstokReader(source, 4, 1, 1, new TextDecoder(encoding)))
-						{	tokens.push(token);
-						}
-					}
-					else
-					{	for await (const tt of jstokReaderArray(source, 4, 1, 1, new TextDecoder(encoding)))
-						{	for (const token of tt)
+				{	for (const isByob of [false, true])
+					{	const comment = encoding=='windows-1252' ? `/*A B\nC*/` : `/*Aф៘\n😀*/`;
+						const string = encoding=='windows-1252' ? '"A"' : '"😀"';
+						const source = stringReader(`${comment}Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; ${string};`, isByob, chunkSize, encoding);
+						const tokens = [];
+						if (!isArray)
+						{	for await (const token of jstokStream(source, 4, 1, 1, new TextDecoder(encoding)))
 							{	tokens.push(token);
 							}
 						}
+						else
+						{	for await (const tt of jstokStreamArray(source, 4, 1, 1, new TextDecoder(encoding)))
+							{	for (const token of tt)
+								{	tokens.push(token);
+								}
+							}
+						}
+						assertEquals
+						(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
+							[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.COMMENT,               text: comment},
+								{nLine: 2, nColumn: 4,  level: 0, type: TokenType.IDENT,                 text: "Abc"},
+								{nLine: 2, nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\r\n"},
+								{nLine: 3, nColumn: 1,  level: 0, type: TokenType.NUMBER,                text: "123"},
+								{nLine: 3, nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
+								{nLine: 3, nColumn: 5,  level: 0, type: TokenType.NUMBER,                text: "45"},
+								{nLine: 3, nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
+								{nLine: 3, nColumn: 9,  level: 0, type: TokenType.NUMBER,                text: "6"},
+								{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE,            text: "\t"},
+								{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER,                text: "7"},
+								{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING,                text: "'\t8\t9'"},
+								{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER,                 text: ";"},
+								{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE,            text: " "},
+								{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t012\t${"},
+								{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING,                text: "'345'"},
+								{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID,   text: "}6${"},
+								{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER,                text: "7"},
+								{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE,            text: "\n"},
+								{nLine: 4, nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
+								{nLine: 4, nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: ";"},
+								{nLine: 4, nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+								{nLine: 4, nColumn: 5,  level: 0, type: TokenType.STRING_TEMPLATE,       text: "``"},
+								{nLine: 4, nColumn: 7,  level: 0, type: TokenType.OTHER,                 text: ";"},
+								{nLine: 4, nColumn: 8,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+								{nLine: 4, nColumn: 9,  level: 0, type: TokenType.REGEXP,                text: "/\t/"},
+								{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER,                 text: ";"},
+								{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE,            text: " "},
+								{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING,                text: '"L1\\\n\tL2"'},
+								{nLine: 5, nColumn: 8,  level: 0, type: TokenType.OTHER,                 text: ";"},
+								{nLine: 5, nColumn: 9,  level: 0, type: TokenType.WHITESPACE,            text: " "},
+								{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING,                text: string},
+								{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER,                 text: ";"},
+							]
+						);
 					}
-					assertEquals
-					(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
-						[	{nLine: 1, nColumn: 1,  level: 0, type: TokenType.COMMENT,               text: comment},
-							{nLine: 2, nColumn: 4,  level: 0, type: TokenType.IDENT,                 text: "Abc"},
-							{nLine: 2, nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\r\n"},
-							{nLine: 3, nColumn: 1,  level: 0, type: TokenType.NUMBER,                text: "123"},
-							{nLine: 3, nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
-							{nLine: 3, nColumn: 5,  level: 0, type: TokenType.NUMBER,                text: "45"},
-							{nLine: 3, nColumn: 7,  level: 0, type: TokenType.WHITESPACE,            text: "\t"},
-							{nLine: 3, nColumn: 9,  level: 0, type: TokenType.NUMBER,                text: "6"},
-							{nLine: 3, nColumn: 10, level: 0, type: TokenType.WHITESPACE,            text: "\t"},
-							{nLine: 3, nColumn: 13, level: 0, type: TokenType.NUMBER,                text: "7"},
-							{nLine: 3, nColumn: 14, level: 0, type: TokenType.STRING,                text: "'\t8\t9'"},
-							{nLine: 3, nColumn: 23, level: 0, type: TokenType.OTHER,                 text: ";"},
-							{nLine: 3, nColumn: 24, level: 0, type: TokenType.WHITESPACE,            text: " "},
-							{nLine: 3, nColumn: 25, level: 0, type: TokenType.STRING_TEMPLATE_BEGIN, text: "`\t012\t${"},
-							{nLine: 3, nColumn: 35, level: 1, type: TokenType.STRING,                text: "'345'"},
-							{nLine: 3, nColumn: 40, level: 0, type: TokenType.STRING_TEMPLATE_MID,   text: "}6${"},
-							{nLine: 3, nColumn: 44, level: 1, type: TokenType.NUMBER,                text: "7"},
-							{nLine: 3, nColumn: 45, level: 1, type: TokenType.WHITESPACE,            text: "\n"},
-							{nLine: 4, nColumn: 1,  level: 0, type: TokenType.STRING_TEMPLATE_END,   text: "}`"},
-							{nLine: 4, nColumn: 3,  level: 0, type: TokenType.OTHER,                 text: ";"},
-							{nLine: 4, nColumn: 4,  level: 0, type: TokenType.WHITESPACE,            text: " "},
-							{nLine: 4, nColumn: 5,  level: 0, type: TokenType.STRING_TEMPLATE,       text: "``"},
-							{nLine: 4, nColumn: 7,  level: 0, type: TokenType.OTHER,                 text: ";"},
-							{nLine: 4, nColumn: 8,  level: 0, type: TokenType.WHITESPACE,            text: " "},
-							{nLine: 4, nColumn: 9,  level: 0, type: TokenType.REGEXP,                text: "/\t/"},
-							{nLine: 4, nColumn: 14, level: 0, type: TokenType.OTHER,                 text: ";"},
-							{nLine: 4, nColumn: 15, level: 0, type: TokenType.WHITESPACE,            text: " "},
-							{nLine: 4, nColumn: 16, level: 0, type: TokenType.STRING,                text: '"L1\\\n\tL2"'},
-							{nLine: 5, nColumn: 8,  level: 0, type: TokenType.OTHER,                 text: ";"},
-							{nLine: 5, nColumn: 9,  level: 0, type: TokenType.WHITESPACE,            text: " "},
-							{nLine: 5, nColumn: 10, level: 0, type: TokenType.STRING,                text: string},
-							{nLine: 5, nColumn: 13, level: 0, type: TokenType.OTHER,                 text: ";"},
-						]
-					);
 				}
 			}
 		}
@@ -183,18 +204,20 @@ Deno.test
 Deno.test
 (	'Reader potential RegExp',
 	async () =>
-	{	const source = new StringReader('/./;', 3);
-		const tokens = [];
-		for await (const token of jstokReader(source))
-		{	tokens.push(token);
+	{	for (const isByob of [false, true])
+		{	const source = stringReader('/./;', isByob, 3);
+			const tokens = [];
+			for await (const token of jstokStream(source))
+			{	tokens.push(token);
+			}
+			assertEquals
+			(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
+				[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/./"},
+					{nLine: 1, nColumn: 4, level: 0, type: TokenType.OTHER,  text: ";"},
+				]
+			);
+			assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
 		}
-		assertEquals
-		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
-			[	{nLine: 1, nColumn: 1, level: 0, type: TokenType.REGEXP, text: "/./"},
-				{nLine: 1, nColumn: 4, level: 0, type: TokenType.OTHER,  text: ";"},
-			]
-		);
-		assertEquals(eval('[' + tokens.map(t => t.debug()).join(',') + ']'), tokens.map(v => Object.assign({}, v)));
 	}
 );
 

@@ -5,8 +5,8 @@ Allows to iterate over tokens in code (code units).
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
-import {assertEquals} from "https://deno.land/std@0.175.0/testing/asserts.ts";
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
+import {assertEquals} from 'https://deno.land/std@0.224.0/assert/assert_equals.ts';
 
 const source =
 `	// Comment
@@ -40,6 +40,12 @@ for (const token of jstok(source))
 	}
 }
 ```
+
+## Change log
+
+- **jstok@v2.0.0**:
+	- `jstokReader(source: Deno.Reader)` function replaced with `jstokStream(source: ReadableStream)`, because `Deno.Reader` is now deprecated
+	- `jstokReaderArray(source: Deno.Reader)` function replaced with `jstokStreamArray(source: ReadableStream)`
 
 ## jstok() - Tokenize string
 
@@ -81,7 +87,7 @@ You can ignore it, or you can react by calling the following `it.next(more)` fun
 In this case this code will be appended to the last token, and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
 
 let source =
 `	// Comment
@@ -153,7 +159,7 @@ For other token types this method returns just a default empty `RegExp` object.
 `debug()` method returns string with console.log()-ready representation of this Token object.
 
 ```ts
-import {jstok} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
+import {jstok} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
 
 const tokens = [...jstok(import.meta.url)];
 console.log(tokens.map(t => t.debug()).join(',\n') + ',');
@@ -195,13 +201,13 @@ const enum TokenType
 - `MORE_REQUEST` - Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
 - `ERROR` - This token type is returned in 2 situations: 1) invalid character occured; 2) unbalanced bracket occured.
 
-## jstokReader() - Tokenize Deno.Reader
+## jstokStream() - Tokenize ReadableStream
 
-This function allows to tokenize a `Deno.Reader` stream of JavaScript or TypeScript source code.
+This function allows to tokenize a `ReadableStream` of JavaScript or TypeScript source code.
 It never generates `TokenType.MORE_REQUEST`.
 
 ```ts
-async function *jstokReader(source: Deno.Reader, tabWidth=4, nLine=1, nColumn=1, decoder?: TextDecoder): AsyncGenerator<Token, void>;
+async function *jstokStream(source: ReadableStream, tabWidth=4, nLine=1, nColumn=1, decoder?: TextDecoder): AsyncGenerator<Token, void>;
 ```
 
 It will start counting lines and chars from the provided `nLine` and `nColumn` values. When counting chars, it will respect the desired `tabWidth`.
@@ -209,40 +215,10 @@ It will start counting lines and chars from the provided `nLine` and `nColumn` v
 If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
 
 ```ts
-import {jstokReader} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
+import {jstokStream} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
-try
-{	for await (const token of jstokReader(fh))
-	{	console.log(token);
-	}
-}
-finally
-{	fh.close();
-}
-```
-
-## jstokReaderArray() - Tokenize Deno.Reader and yield arrays of tokens
-
-This function works like `jstokReader()`, but buffers tokens in array, and yields this array periodically.
-This is to avoid creating and awaiting Promises for each Token in the code.
-
-```ts
-async function *jstokReaderArray(source: Deno.Reader, tabWidth=4, nLine=1, nColumn=1, decoder?: TextDecoder): AsyncGenerator<Token[], void>;
-```
-
-```ts
-import {jstokReaderArray} from 'https://deno.land/x/jstok@v1.1.3/mod.ts';
-
-const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
-try
-{	for await (const tokens of jstokReaderArray(fh))
-	{	for (const token of tokens)
-		{	console.log(token);
-		}
-	}
-}
-finally
-{	fh.close();
+for await (const token of jstokStream(fh.readable))
+{	console.log(token);
 }
 ```

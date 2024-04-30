@@ -1,9 +1,3 @@
-import {CharsReader} from "./chars_reader.ts";
-
-const BUFFER_SIZE = 16*1024;
-
-const defaultDecoder = new TextDecoder;
-
 const isBigEndian = new Uint8Array(new Uint16Array([1]).buffer)[0] == 0;
 const decoder16 = new TextDecoder(isBigEndian ? 'utf-16be' : 'utf-16');
 
@@ -746,84 +740,5 @@ L:						for (; i<iEnd; i++)
 
 	if (level != 0)
 	{	yield new Token('', TokenType.ERROR, nLine, nColumn, level);
-	}
-}
-
-/**	Returns async iterator over JavaScript tokens found in source code.
-	`nLine` and `nColumn` - will start counting lines from these initial values.
-	`decoder` will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
- **/
-export async function *jstokReader(source: Deno.Reader, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token, void>
-{	const reader = new CharsReader(source, decoder.encoding);
-	const buffer = new Uint8Array(BUFFER_SIZE);
-	let part = await reader.readChars(buffer);
-	if (part != null)
-	{	const it = jstok(part, tabWidth, nLine, nColumn);
-		while (true)
-		{	let {value} = it.next();
-			if (!value)
-			{	return;
-			}
-			while (value.type == TokenType.MORE_REQUEST)
-			{	part = await reader.readChars(buffer);
-				if (part != null)
-				{	value = it.next(part).value;
-					if (!value)
-					{	return; // must not happen
-					}
-				}
-				else
-				{	value = it.next().value;
-					if (!value)
-					{	return; // must not happen
-					}
-					break;
-				}
-			}
-			yield value;
-		}
-	}
-}
-
-/**	Like `jstokReader()`, but buffers tokens in array, and yields this array periodically.
-	This is to avoid creating and awaiting Promises for each Token in the code.
- **/
-export async function *jstokReaderArray(source: Deno.Reader, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
-{	const reader = new CharsReader(source, decoder.encoding);
-	const buffer = new Uint8Array(BUFFER_SIZE);
-	let part = await reader.readChars(buffer);
-	if (part != null)
-	{	const it = jstok(part, tabWidth, nLine, nColumn);
-		let tokensBuffer = [];
-		while (true)
-		{	let {value} = it.next();
-			if (!value)
-			{	break;
-			}
-			while (value.type == TokenType.MORE_REQUEST)
-			{	if (tokensBuffer.length)
-				{	yield tokensBuffer;
-					tokensBuffer = [];
-				}
-				part = await reader.readChars(buffer);
-				if (part != null)
-				{	value = it.next(part).value;
-					if (!value)
-					{	return; // must not happen
-					}
-				}
-				else
-				{	value = it.next().value;
-					if (!value)
-					{	return; // must not happen
-					}
-					break;
-				}
-			}
-			tokensBuffer[tokensBuffer.length] = value;
-		}
-		if (tokensBuffer.length)
-		{	yield tokensBuffer;
-		}
 	}
 }
