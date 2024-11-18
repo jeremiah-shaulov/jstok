@@ -1,6 +1,6 @@
 import {jstok, jstokStream, Token, TokenType} from '../../mod.ts';
-import {assertEquals} from 'https://deno.land/std@0.224.0/assert/assert_equals.ts';
-import { jstokStreamArray } from '../jstok_stream.ts';
+import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';;
+import {jstokStreamArray} from '../jstok_stream.ts';
 
 function stringReader(str: string, isByob=false, chunkSize=10, encoding='utf-8')
 {	let data: Uint8Array;
@@ -294,7 +294,7 @@ Deno.test
 Deno.test
 (	'Numbers',
 	() =>
-	{	const source = `0  1.1  .1  1.  123.456e9  123.456e-9  1.e3  .1e3  1.e+3  0n  0b01  0b01n  0o755  0o755n  0x2BE  0x2BEn`;
+	{	const source = `0  1.1  .1  1.  123.456e9  123.456E-9  1.e3  .1e3  1.e+3  0n  0b01  0b01n  0o755  0o755n  0x2BE  0x2BEn`;
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
@@ -309,7 +309,7 @@ Deno.test
 				{nLine: 1,  nColumn: 15, level: 0, type: TokenType.WHITESPACE,            text: "  "},
 				{nLine: 1,  nColumn: 17, level: 0, type: TokenType.NUMBER,                text: "123.456e9"},
 				{nLine: 1,  nColumn: 26, level: 0, type: TokenType.WHITESPACE,            text: "  "},
-				{nLine: 1,  nColumn: 28, level: 0, type: TokenType.NUMBER,                text: "123.456e-9"},
+				{nLine: 1,  nColumn: 28, level: 0, type: TokenType.NUMBER,                text: "123.456E-9"},
 				{nLine: 1,  nColumn: 38, level: 0, type: TokenType.WHITESPACE,            text: "  "},
 				{nLine: 1,  nColumn: 40, level: 0, type: TokenType.NUMBER,                text: "1.e3"},
 				{nLine: 1,  nColumn: 44, level: 0, type: TokenType.WHITESPACE,            text: "  "},
@@ -389,7 +389,7 @@ Deno.test
 Deno.test
 (	'RegExp',
 	() =>
-	{	const source = `/^text$/sig + 1 /2e1/ 3 / /[a-z\\-]{3,4}\\?(?:.)/`;
+	{	const source = `/^text$/sig + 1 /2e1/ 3 / /[a-z\\-]{3,4}\\?(?:.)\\p{Letter}\\u{A}/u`;
 		const tokens = [...jstok(source)];
 		assertEquals(tokens.join(''), source);
 		assertEquals
@@ -408,8 +408,8 @@ Deno.test
 				{nLine: 1,  nColumn: 24, level: 0, type: TokenType.WHITESPACE,            text: " "},
 				{nLine: 1,  nColumn: 25, level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 26, level: 0, type: TokenType.WHITESPACE,            text: " "},
-				{nLine: 1,  nColumn: 27, level: 0, type: TokenType.MORE_REQUEST,          text: "/[a-z\\-]{3,4}\\?(?:.)/"},
-				{nLine: 1,  nColumn: 27, level: 0, type: TokenType.REGEXP,                text: "/[a-z\\-]{3,4}\\?(?:.)/"},
+				{nLine: 1,  nColumn: 27, level: 0, type: TokenType.MORE_REQUEST,          text: "/[a-z\\-]{3,4}\\?(?:.)\\p{Letter}\\u{A}/u"},
+				{nLine: 1,  nColumn: 27, level: 0, type: TokenType.REGEXP,                text: "/[a-z\\-]{3,4}\\?(?:.)\\p{Letter}\\u{A}/u"},
 			]
 		);
 		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
@@ -666,19 +666,8 @@ Deno.test
 Deno.test
 (	'Invalid and exotic RegExp',
 	() =>
-	{	let source = `/^{/;`;
+	{	let source = `/)/;`;
 		let tokens = [...jstok(source)];
-		assertEquals
-		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
-			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.REGEXP,                text: "/^{/"},
-				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.MORE_REQUEST,          text: ";"},
-				{nLine: 1,  nColumn: 5,  level: 0, type: TokenType.OTHER,                 text: ";"},
-			]
-		);
-		assertEquals(tokens[tokens.length-1].nColumn - 1 + tokens[tokens.length-1].text.length, source.length);
-
-		source = `/)/;`;
-		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
 			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
@@ -732,7 +721,8 @@ Deno.test
 		tokens = [...jstok(source)];
 		assertEquals
 		(	tokens.map(v => Object.assign<Record<never, never>, unknown>({}, v)),
-			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
+			[	{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.MORE_REQUEST,          text: "/{a"},
+				{nLine: 1,  nColumn: 1,  level: 0, type: TokenType.OTHER,                 text: "/"},
 				{nLine: 1,  nColumn: 2,  level: 0, type: TokenType.OTHER,                 text: "{"},
 				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.MORE_REQUEST,          text: "a"},
 				{nLine: 1,  nColumn: 3,  level: 1, type: TokenType.IDENT,                 text: "a"},

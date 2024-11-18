@@ -66,21 +66,21 @@ const RE_STRING_TEMPLATE = new RegExp(RE_STRING_TEMPLATE_STR.replace(/\s+/g, '')
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
 	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
-	[@#]? ([_$] | \p{General_Category=Letter})  (?:[_$0-9] | \p{General_Category=Letter})*  |
+	[@#]? ([_$] | \p{Letter})  (?:[_$] | \p{Number} | \p{Letter})*  |
 	(	0
 		(?:	[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
 			[Oo] (?:[0-7]+|$)  n?  |
 			[Bb] (?:[01]+|$)  n?  |
-			\.  [0-9_]*  (?: e [+\-]? [0-9_]+ )?  |
+			\.  [0-9_]*  (?: [Ee] [+\-]? [0-9_]+ )?  |
 			[0-9_]*  n?
 		)  |
-		[1-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: e [+\-]? [0-9_]+ )? )?  |
-		                      \. [0-9][0-9_]*    (?: e [+\-]? [0-9_]+ )?
+		[1-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: [Ee] [+\-]? [0-9_]+ )? )?  |
+		                      \. [0-9][0-9_]*    (?: [Ee] [+\-]? [0-9_]+ )?
 	)  |
 	' [^'\\\r\n]* (?:\\(?:\r\n|.|$) [^'\\\r\n]*)* (?:'|$)  |
 	" [^"\\\r\n]* (?:\\(?:\r\n|.|$) [^"\\\r\n]*)* (?:"|$)  |
 	${'`'}  ${RE_STRING_TEMPLATE_STR}  |
-	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | ={1,3} | !=?=? | [.](?:[.][.])?
+	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | => | ={1,3} | !=?=? | [.](?:[.][.])?
 `;
 const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
 
@@ -647,23 +647,6 @@ L:						for (; i<iEnd; i++)
 										}
 									}
 									break;
-								case C_BRACE_OPEN:
-									while (++i < iEnd)
-									{	const c = source.charCodeAt(i);
-										switch (c)
-										{	case C_BRACE_CLOSE:
-												continue L;
-											case C_COMMA:
-												break;
-											case C_SLASH:
-												i--;
-												continue L;
-											default:
-												if (c<C_ZERO || c>C_NINE)
-												{	break L;
-												}
-										}
-									}
 							}
 						}
 
