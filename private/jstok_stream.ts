@@ -24,7 +24,7 @@ export async function *jstokStream(source: ReadableStream, tabWidth=4, nLine=1, 
 	}
 }
 
-/**	Like `jstokReader()`, but buffers tokens in array, and yields this array periodically.
+/**	Like `jstokStream()`, but buffers tokens in array, and yields this array periodically.
 	This is to avoid creating and awaiting Promises for each Token in the code.
  **/
 export async function *jstokStreamArray(source: ReadableStream, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
