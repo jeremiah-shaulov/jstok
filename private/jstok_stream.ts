@@ -9,7 +9,7 @@ const defaultDecoder = new TextDecoder;
 	This function doesn't generate `TokenType.MORE_REQUEST` tokens.
 	`nLine` and `nColumn` - will start counting lines from these initial values.
  **/
-export async function *jstokStream(source: ReadableStream, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token, void>
+export async function *jstokStream(source: ReadableStream<Uint8Array>, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token, void>
 {	using reader = new TextReader(source, decoder);
 	const it = jstok(await reader.read(), tabWidth, nLine, nColumn);
 	let token;
@@ -27,7 +27,7 @@ export async function *jstokStream(source: ReadableStream, tabWidth=4, nLine=1, 
 /**	Like `jstokStream()`, but buffers tokens in array, and yields this array periodically.
 	This is to avoid creating and awaiting Promises for each Token in the code.
  **/
-export async function *jstokStreamArray(source: ReadableStream, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
+export async function *jstokStreamArray(source: ReadableStream<Uint8Array>, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
 {	using reader = new TextReader(source, decoder);
 	const it = jstok(await reader.read(), tabWidth, nLine, nColumn);
 	let tokensBuffer = new Array<Token>;
@@ -56,7 +56,7 @@ class TextReader
 	#decoder: TextDecoder;
 	#buffer = EMPTY_BUFFER.buffer;
 
-	constructor(input: ReadableStream, decoder: TextDecoder)
+	constructor(input: ReadableStream<Uint8Array>, decoder: TextDecoder)
 	{	try
 		{	this.#readerByob = input.getReader({mode: 'byob'});
 			this.#buffer = new ArrayBuffer(BUFFER_SIZE);

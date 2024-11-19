@@ -14,7 +14,6 @@ const C_MINUS = '-'.charCodeAt(0);
 const C_TIMES = '*'.charCodeAt(0);
 const C_SLASH = '/'.charCodeAt(0);
 const C_BACKSLASH = '\\'.charCodeAt(0);
-const C_COMMA = ','.charCodeAt(0);
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
 const C_TAB = '\t'.charCodeAt(0);
@@ -92,58 +91,101 @@ const enum Structure
 }
 
 export const enum TokenType
-{	/** Any number of any whitespace characters. Multiple such token types are not generated in sequence. */
+{	/**	Any number of any whitespace characters. Multiple such token types are not generated in sequence.
+	 **/
 	WHITESPACE,
-	/** One single-line or multiline comment, or hashbang. */
+
+	/**	One single-line or multiline comment, or hashbang.
+	 **/
 	COMMENT,
-	/** Like `@json`. */
+
+	/**	Like `@Component`.
+	 **/
 	ATTRIBUTE,
-	/** Can contain unicode letters. Private property names like `#flags` are also considered `IDENT`s. */
+
+	/**	Can contain unicode letters. Private property names like `#flags` are also considered `IDENT`s.
+	 **/
 	IDENT,
-	/** Number. */
+
+	/**	Number.
+	 **/
 	NUMBER,
-	/** String .*/
+
+	/**	String.
+	 **/
 	STRING,
-	/** Whole backtick-string, if it has no parameters. */
+
+	/**	Whole backtick-string, if it has no parameters.
+	 **/
 	STRING_TEMPLATE,
-	/** First part of a backtick-string, till it's first parameter. The contents of parameters will be tokenized separately, and returned as corresponding token types. */
+
+	/**	First part of a backtick-string, till it's first parameter.
+		The contents of parameters will be tokenized separately, and returned as corresponding token types.
+	 **/
 	STRING_TEMPLATE_BEGIN,
-	/** Part of backtick-string between two parameters. */
+
+	/**	Part of backtick-string between two parameters.
+	 **/
 	STRING_TEMPLATE_MID,
-	/** Last part of backtick-string. */
+
+	/**	Last part of backtick-string.
+	 **/
 	STRING_TEMPLATE_END,
-	/** Regular expression literal. */
+
+	/**	Regular expression literal.
+	 **/
 	REGEXP,
-	/** Other tokens, like `+`, `++`, `?.`, etc. */
+
+	/**	Other tokens, like `+`, `++`, `?.`, etc.
+	 **/
 	OTHER,
-	/** Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue. */
+
+	/**	Before returning the last token found in the source string, {@link jstok()} generate this meta-token.
+		If then you call `it.next(more)` with a nonempty string argument that contains source code continuation,
+		this code will be appended to the contents of this `MORE_REQUEST` token, and the tokenization process will continue.
+	 **/
 	MORE_REQUEST,
-	/** This token type is returned in 3 situations: 1) invalid character occured; 2) unbalanced bracket occured; 3) occured comment inside string template parameter. If then you call `it.next(ignore)` with `true` argument, this error condition will be ignored, and the tokenization will continue. */
+
+	/**	This token type is returned in 2 situations:
+		1. Invalid character occured
+		2. Unbalanced bracket occured
+	 **/
 	ERROR,
 }
 
 /**	Represents a JavaScript token.
-	`text` - Original JavaScript token text.
-	`type` - Token type.
-	`nLine` Line number where this token starts.
-	`nColumn` - Column number on the line where this token starts.
-	`level` - Nesting level. Entering `(`, `[` and `{` increments the level counter. Also the level is incremented when entering `${` parameters in string templates.
  **/
 export class Token
 {	constructor
-	(	public text: string,
+	(	/**	Original JavaScript token text. It's copied from the source code and not modified.
+		 **/
+		public text: string,
+
+		/**	Token type.
+		 **/
 		public type: TokenType,
+
+		/**	Line number where this token starts.
+		 **/
 		public nLine = 1,
+
+		/**	Column number on the line where this token starts.
+		 **/
 		public nColumn = 1,
+
+		/**	Nesting level. Entering `(`, `[` and `{` increments the level counter. Also the level is incremented when entering `${` parameters in string templates.
+		 **/
 		public level = 0,
 	){}
 
-	/**	Returns original JavaScript token (`this.text`), except for `TokenType.MORE_REQUEST`, for which it returns empty string.
+	/**	Returns original JavaScript token ({@link text}), except for {@link TokenType.MORE_REQUEST}, for which it returns empty string.
 	 **/
 	toString()
 	{	return this.type==TokenType.MORE_REQUEST ? '' : this.text;
 	}
 
+	/**	Returns string with console.log()-ready representation of this `Token` object for debug purposes.
+	 **/
 	debug()
 	{	let type = '';
 		switch (this.type)
@@ -165,11 +207,12 @@ export class Token
 		return `{nLine: ${pad(this.nLine+',', 3)} nColumn: ${pad(this.nColumn+',', 3)} level: ${this.level}, type: ${type} text: ${JSON.stringify(this.text)}}`;
 	}
 
-	/**	Converts JavaScript token to it's JavaScript value, if it's string.
-		For `TokenType.COMMENT` - it's the text after `//` or between `/*` and `*` `/`.
-		For `TokenType.STRING` and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
-		For `TokenType.MORE_REQUEST` - empty string.
-		For others, including `TokenType.NUMBER` - it's the original JavaScript token.
+	/**	Converts JavaScript token to it's JavaScript value, if the value is string.
+
+		- For {@link TokenType.COMMENT} - it's the text after `//` or between `/*` and `*‎/`.
+		- For {@link TokenType.STRING} and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
+		- For {@link TokenType.MORE_REQUEST} - empty string.
+		- For others, including {@link TokenType.NUMBER} - it's the original JavaScript token.
 	 **/
 	getValue()
 	{	const {type, text} = this;
@@ -299,8 +342,7 @@ export class Token
 		}
 	}
 
-	/**	For `TokenType.NUMBER` returns `Number` or `BigInt` value of the token.
-		For others returns `NaN`.
+	/**	Returns `Number` or `BigInt` value of the token for {@link TokenType.NUMBER} tokens. For others returns `NaN`.
 	 **/
 	getNumberValue()
 	{	let {type, text} = this;
@@ -328,7 +370,7 @@ export class Token
 		}
 	}
 
-	/**	Returns `RegExp` object. For `TokenType.REGEXP` tokens it's the regular expression that this token represents.
+	/**	Returns `RegExp` object. For {@link TokenType.REGEXP} tokens it's the regular expression that this token represents.
 		For other token types this method returns just a default empty `RegExp` object.
 	 **/
 	getRegExpValue()

@@ -1,12 +1,23 @@
+<!--
+	This file is generated with the following command:
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.43/tsa.ts doc-md --outFile=README.md mod.ts --mainTitle 'jstok - JavaScript and TypeScript source code tokenizer' --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md --importUrl https://deno.land/x/jstok@v2.0.1/mod.ts
+-->
+
 # jstok - JavaScript and TypeScript source code tokenizer
 
-Allows to iterate over tokens in code (code units).
+[Documentation Index](generated-doc/README.md)
+
+Allows to iterate over tokens (code units) in Javascript or Typescript code.
 
 ## Example
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
-import {assertEquals} from 'https://deno.land/std@0.224.0/assert/assert_equals.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
+// deno run /tmp/example-p9mn.ts
+
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
+import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';
 
 const source =
 `	// Comment
@@ -41,70 +52,41 @@ for (const token of jstok(source))
 }
 ```
 
-## Change log
-
-- **jstok@v2.0.0**:
-	- `jstokReader(source: Deno.Reader)` function replaced with `jstokStream(source: ReadableStream)`, because `Deno.Reader` is now deprecated
-	- `jstokReaderArray(source: Deno.Reader)` function replaced with `jstokStreamArray(source: ReadableStream)`
-
 ## jstok() - Tokenize string
+
+> `function` [jstok](generated-doc/function.jstok/README.md)(source: `string`, tabWidth: `number`=4, nLine: `number`=1, nColumn: `number`=1): Generator\<[Token](generated-doc/class.Token/README.md), `void`, `string`>
 
 This function returns iterator over JavaScript or TypeScript tokens found in a source code provided as a string.
 
-```ts
-function jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generator<Token, void, string|undefined>;
-
-class Token
-{	text: string;
-	type: TokenType;
-	nLine: number;
-	nColumn: number;
-	level: number;
-}
-
-const enum TokenType
-{	WHITESPACE,
-	COMMENT,
-	ATTRIBUTE,
-	IDENT,
-	NUMBER,
-	STRING,
-	STRING_TEMPLATE,
-	STRING_TEMPLATE_BEGIN,
-	STRING_TEMPLATE_MID,
-	STRING_TEMPLATE_END,
-	REGEXP,
-	OTHER,
-	MORE_REQUEST,
-	ERROR,
-}
-```
-
 It will start counting lines and chars from the provided `nLine` and `nColumn` values. When counting chars, it will respect the desired `tabWidth`.
 
-Before returning the last token in the source, it generates `TokenType.MORE_REQUEST`.
-You can ignore it, or you can react by calling the following `it.next(more)` function of the iterator with a string argument, that contains code continuation.
-In this case this code will be appended to the last token, and the tokenization process will continue.
+Before returning the last token in the source, it generates [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12).
+You can ignore it, or you can react by calling the next `it.next(more)` function on the iterator with a string argument, that contains code continuation.
+This code will be concatenated with the contents of the [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12), and the tokenization process will continue.
 
 ```ts
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-65ya>~)' > /tmp/example-65ya.ts
+// deno run /tmp/example-65ya.ts
+
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
 
 let source =
 `	// Comment
 	console.log(\`Current time: \${new Date}\`);
 `;
 
-function read()
+function getNextPart()
 {	const part = source.slice(0, 10);
 	source = source.slice(10);
 	return part;
 }
 
-const it = jstok(read());
+const it = jstok(getNextPart());
 let token;
 L:while ((token = it.next().value))
 {	while (token.type == TokenType.MORE_REQUEST)
-	{	token = it.next(read()).value;
+	{	token = it.next(getNextPart()).value;
 		if (!token)
 		{	break L;
 		}
@@ -115,27 +97,27 @@ L:while ((token = it.next().value))
 ```
 
 This library cannot be used to check source code syntax.
-Though in 3 cases it returns `TokenType.ERROR`: 1) if invalid character occured; 2) if unbalanced bracket occured; 3) if occured comment inside string template parameter.
+Though in 2 cases it returns [TokenType.ERROR](generated-doc/enum.TokenType/README.md#error--13):
+
+1. if invalid character occured
+2. if unbalanced bracket occured
 
 ## Token
 
-```ts
-class Token
-{	constructor
-	(	public text: string,
-		public type: TokenType,
-		public nLine = 1,
-		public nColumn = 1,
-		public level = 0,
-	);
-
-	toString(): string;
-	getValue(): string;
-	getNumberValue(): number | bigint;
-	getRegExpValue(): RegExp;
-	debug(): string;
-}
-```
+> `class` Token<br>
+> {<br>
+> &nbsp; &nbsp; 🔧 [constructor](generated-doc/class.Token/README.md#-constructortext-string-type-tokentype-nline-number1-ncolumn-number1-level-number0)(text: `string`, type: [TokenType](generated-doc/enum.TokenType/README.md), nLine: `number`=1, nColumn: `number`=1, level: `number`=0)<br>
+> &nbsp; &nbsp; 📄 [text](generated-doc/class.Token/README.md#-text-string): `string`<br>
+> &nbsp; &nbsp; 📄 [type](generated-doc/class.Token/README.md#-type-tokentype): [TokenType](generated-doc/enum.TokenType/README.md)<br>
+> &nbsp; &nbsp; 📄 [nLine](generated-doc/class.Token/README.md#-nline-number): `number`<br>
+> &nbsp; &nbsp; 📄 [nColumn](generated-doc/class.Token/README.md#-ncolumn-number): `number`<br>
+> &nbsp; &nbsp; 📄 [level](generated-doc/class.Token/README.md#-level-number): `number`<br>
+> &nbsp; &nbsp; ⚙ [toString](generated-doc/class.Token/README.md#-tostring-string)(): `string`<br>
+> &nbsp; &nbsp; ⚙ [debug](generated-doc/class.Token/README.md#-debug-string)(): `string`<br>
+> &nbsp; &nbsp; ⚙ [getValue](generated-doc/class.Token/README.md#-getvalue-string)(): `string`<br>
+> &nbsp; &nbsp; ⚙ [getNumberValue](generated-doc/class.Token/README.md#-getnumbervalue-number--bigint)(): `number` | `bigint`<br>
+> &nbsp; &nbsp; ⚙ [getRegExpValue](generated-doc/class.Token/README.md#-getregexpvalue-regexp)(): RegExp<br>
+> }
 
 - `text` - original JavaScript token text.
 - `type` - Token type.
@@ -143,52 +125,56 @@ class Token
 - `nColumn` - Column number on the line where this token starts.
 - `level` - Nesting level. Entering `(`, `[` and `{` increments the level counter. Also the level is incremented when entering `${` parameters in string templates.
 
-`toString()` method returns original JavaScript token (`this.text`), except for `TokenType.MORE_REQUEST`, for which it returns empty string.
+[toString()](generated-doc/class.Token/README.md#-tostring-string) method returns original JavaScript token (`this.text`), except for [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12), for which it returns empty string.
 
-`getValue()` method converts JavaScript token to it's JavaScript value, if it's string.
-- For `TokenType.COMMENT` - it's the text after `//` or between `/*` and `*/`.
-- For `TokenType.STRING` and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
-- For `TokenType.MORE_REQUEST` - empty string.
-- For others, including `TokenType.NUMBER` - it's the original JavaScript token.
+[getValue()](generated-doc/class.Token/README.md#-getvalue-string) method converts JavaScript token to it's JavaScript value, if the value is string.
+- For [TokenType.COMMENT](generated-doc/enum.TokenType/README.md#comment--1) - it's the text after `//` or between `/*` and `*‎/`.
+- For [TokenType.STRING](generated-doc/enum.TokenType/README.md#string--5) and all `TokenType.STRING_TEMPLATE*` types - it's the JavaScript value of the token.
+- For [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12) - empty string.
+- For others, including [TokenType.NUMBER](generated-doc/enum.TokenType/README.md#number--4) - it's the original JavaScript token.
 
-`getNumberValue()` method returns `Number` or `BigInt` value of the token for `TokenType.NUMBER` tokens. For others returns `NaN`.
+[getNumberValue()](generated-doc/class.Token/README.md#-getnumbervalue-number--bigint) method returns `Number` or `BigInt` value of the token for [TokenType.NUMBER](generated-doc/enum.TokenType/README.md#number--4) tokens. For others returns `NaN`.
 
-`getRegExpValue()` method returns `RegExp` object. For `TokenType.REGEXP` tokens it's the regular expression that this token represents.
+[getRegExpValue()](generated-doc/class.Token/README.md#-getregexpvalue-regexp) method returns `RegExp` object. For [TokenType.REGEXP](generated-doc/enum.TokenType/README.md#regexp--10) tokens it's the regular expression that this token represents.
 For other token types this method returns just a default empty `RegExp` object.
 
-`debug()` method returns string with console.log()-ready representation of this Token object.
+[debug()](generated-doc/class.Token/README.md#-debug-string) method returns string with console.log()-ready representation of this `Token` object for debug purposes.
 
 ```ts
-import {jstok} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-pf4z>~)' > /tmp/example-pf4z.ts
+// deno run --allow-read /tmp/example-pf4z.ts
 
-const tokens = [...jstok(import.meta.url)];
+import {jstok} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
+
+const code = await Deno.readTextFile(new URL(import.meta.url).pathname);
+const tokens = [...jstok(code)];
 console.log(tokens.map(t => t.debug()).join(',\n') + ',');
 ```
 
 ## TokenType
 
-```ts
-const enum TokenType
-{	WHITESPACE,
-	COMMENT,
-	ATTRIBUTE,
-	IDENT,
-	NUMBER,
-	STRING,
-	STRING_TEMPLATE,
-	STRING_TEMPLATE_BEGIN,
-	STRING_TEMPLATE_MID,
-	STRING_TEMPLATE_END,
-	REGEXP,
-	OTHER,
-	MORE_REQUEST,
-	ERROR,
-}
-```
+> `const` `enum` TokenType<br>
+> {<br>
+> &nbsp; &nbsp; [WHITESPACE](generated-doc/enum.TokenType/README.md#whitespace--0) = <mark>0</mark><br>
+> &nbsp; &nbsp; [COMMENT](generated-doc/enum.TokenType/README.md#comment--1) = <mark>1</mark><br>
+> &nbsp; &nbsp; [ATTRIBUTE](generated-doc/enum.TokenType/README.md#attribute--2) = <mark>2</mark><br>
+> &nbsp; &nbsp; [IDENT](generated-doc/enum.TokenType/README.md#ident--3) = <mark>3</mark><br>
+> &nbsp; &nbsp; [NUMBER](generated-doc/enum.TokenType/README.md#number--4) = <mark>4</mark><br>
+> &nbsp; &nbsp; [STRING](generated-doc/enum.TokenType/README.md#string--5) = <mark>5</mark><br>
+> &nbsp; &nbsp; [STRING\_TEMPLATE](generated-doc/enum.TokenType/README.md#string_template--6) = <mark>6</mark><br>
+> &nbsp; &nbsp; [STRING\_TEMPLATE\_BEGIN](generated-doc/enum.TokenType/README.md#string_template_begin--7) = <mark>7</mark><br>
+> &nbsp; &nbsp; [STRING\_TEMPLATE\_MID](generated-doc/enum.TokenType/README.md#string_template_mid--8) = <mark>8</mark><br>
+> &nbsp; &nbsp; [STRING\_TEMPLATE\_END](generated-doc/enum.TokenType/README.md#string_template_end--9) = <mark>9</mark><br>
+> &nbsp; &nbsp; [REGEXP](generated-doc/enum.TokenType/README.md#regexp--10) = <mark>10</mark><br>
+> &nbsp; &nbsp; [OTHER](generated-doc/enum.TokenType/README.md#other--11) = <mark>11</mark><br>
+> &nbsp; &nbsp; [MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12) = <mark>12</mark><br>
+> &nbsp; &nbsp; [ERROR](generated-doc/enum.TokenType/README.md#error--13) = <mark>13</mark><br>
+> }
 
 - `WHITESPACE` - Any number of any whitespace characters. Multiple such token types are not generated in sequence.
 - `COMMENT` - One single-line or multiline comment, or hashbang.
-- `ATTRIBUTE` - Like `@json`.
+- `ATTRIBUTE` - Like `@Component`.
 - `IDENT` - Can contain unicode letters. Private property names like `#flags` are also considered `IDENT`s.
 - `NUMBER` - Number.
 - `STRING` - String.
@@ -198,24 +184,26 @@ const enum TokenType
 - `STRING_TEMPLATE_END` - Last part of backtick-string.
 - `REGEXP` - Regular expression literal.
 - `OTHER` - Other tokens, like `+`, `++`, `?.`, etc.
-- `MORE_REQUEST` - Before returning the last token found in the source string, `jstok()` generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
+- `MORE_REQUEST` - Before returning the last token found in the source string, [jstok()](generated-doc/function.jstok/README.md) generate this meta-token. If then you call `it.next(more)` with a nonempty string argument, this string will be appended to the last token, and the tokenization will continue.
 - `ERROR` - This token type is returned in 2 situations: 1) invalid character occured; 2) unbalanced bracket occured.
 
-## jstokStream() - Tokenize ReadableStream
+## jstokStream() - Tokenize ReadableStream<Uint8Array>
 
-This function allows to tokenize a `ReadableStream` of JavaScript or TypeScript source code.
-It never generates `TokenType.MORE_REQUEST`.
+This function allows to tokenize a `ReadableStream<Uint8Array>` of JavaScript or TypeScript source code.
+It never generates [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12).
 
-```ts
-async function *jstokStream(source: ReadableStream, tabWidth=4, nLine=1, nColumn=1, decoder?: TextDecoder): AsyncGenerator<Token, void>;
-```
+> `function` [jstokStream](generated-doc/function.jstokStream/README.md)(source: ReadableStream\<Uint8Array>, tabWidth: `number`=4, nLine: `number`=1, nColumn: `number`=1, decoder: TextDecoder=defaultDecoder): AsyncGenerator\<[Token](generated-doc/class.Token/README.md), `void`, `any`>
 
 It will start counting lines and chars from the provided `nLine` and `nColumn` values. When counting chars, it will respect the desired `tabWidth`.
 
-If `decoder` is provided, will use it to convert bytes to text. This function only supports "utf-8", "utf-16le", "utf-16be" and all 1-byte encodings (not "big5", etc.).
+If `decoder` is provided, will use it to convert bytes to text.
 
 ```ts
-import {jstokStream} from 'https://deno.land/x/jstok@v2.0.0/mod.ts';
+// To download and run this example:
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-ksv8>~)' > /tmp/example-ksv8.ts
+// deno run --allow-read /tmp/example-ksv8.ts
+
+import {jstokStream} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 for await (const token of jstokStream(fh.readable))
