@@ -1,6 +1,6 @@
 import {jstok, jstokStream, Token, TokenType} from '../../mod.ts';
-import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';;
 import {jstokStreamArray} from '../jstok_stream.ts';
+import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';
 
 function stringReader(str: string, isByob=false, chunkSize=10, encoding='utf-8')
 {	let data: Uint8Array;

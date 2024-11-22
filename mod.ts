@@ -170,6 +170,7 @@
 	```
 
 	@module
+	@summary jstok - JavaScript and TypeScript source code tokenizer
  **/
 
 export {jstok, Token, TokenType} from './private/jstok.ts';
