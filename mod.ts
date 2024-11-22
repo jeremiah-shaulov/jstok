@@ -44,7 +44,7 @@
 
 	## jstok() - Tokenize string
 
-	{@linkcode jstok()}
+	{@linkcode jstok}
 
 	This function returns iterator over JavaScript or TypeScript tokens found in a source code provided as a string.
 
