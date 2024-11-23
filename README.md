@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.47/tsa.ts doc-md --outFile=README.md mod.ts --outUrl https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md --importUrl https://deno.land/x/jstok@v2.0.1/mod.ts
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md --importUrl=https://deno.land/x/jstok@v2.0.1/mod.ts mod.ts
 -->
 
 # jstok - JavaScript and TypeScript source code tokenizer
