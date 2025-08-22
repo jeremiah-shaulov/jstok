@@ -1,6 +1,6 @@
 <!--
 	This file is generated with the following command:
-	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.49/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md --importUrl=https://deno.land/x/jstok@v2.0.1/mod.ts mod.ts
+	deno run --allow-all https://raw.githubusercontent.com/jeremiah-shaulov/tsa/v0.0.51/tsa.ts doc-md --outFile=README.md --outUrl=https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.1.1/README.md --importUrl=https://deno.land/x/jstok@v2.1.1/mod.ts mod.ts
 -->
 
 # jstok - JavaScript and TypeScript source code tokenizer
@@ -13,11 +13,11 @@ Allows to iterate over tokens (code units) in Javascript or Typescript code.
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-p9mn>~)' > /tmp/example-p9mn.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.1.1/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-p9mn>/' > /tmp/example-p9mn.ts
 // deno run /tmp/example-p9mn.ts
 
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
-import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.1.1/mod.ts';
+import {assertEquals} from 'jsr:@std/assert@1.0.14/equals';
 
 const source =
 `	// Comment
@@ -66,10 +66,10 @@ This code will be concatenated with the contents of the [TokenType.MORE\_REQUEST
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-65ya>~)' > /tmp/example-65ya.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.1.1/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-65ya>/' > /tmp/example-65ya.ts
 // deno run /tmp/example-65ya.ts
 
-import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
+import {jstok, TokenType} from 'https://deno.land/x/jstok@v2.1.1/mod.ts';
 
 let source =
 `	// Comment
@@ -142,10 +142,10 @@ For other token types this method returns just a default empty `RegExp` object.
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-pf4z>~)' > /tmp/example-pf4z.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.1.1/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-pf4z>/' > /tmp/example-pf4z.ts
 // deno run --allow-read /tmp/example-pf4z.ts
 
-import {jstok} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
+import {jstok} from 'https://deno.land/x/jstok@v2.1.1/mod.ts';
 
 const code = await Deno.readTextFile(new URL(import.meta.url).pathname);
 const tokens = [...jstok(code)];
@@ -192,7 +192,7 @@ console.log(tokens.map(t => t.debug()).join(',\n') + ',');
 This function allows to tokenize a `ReadableStream<Uint8Array>` of JavaScript or TypeScript source code.
 It never generates [TokenType.MORE\_REQUEST](generated-doc/enum.TokenType/README.md#more_request--12).
 
-> `function` [jstokStream](generated-doc/function.jstokStream/README.md)(source: ReadableStream\<Uint8Array>, tabWidth: `number`=4, nLine: `number`=1, nColumn: `number`=1, decoder: TextDecoder=defaultDecoder): AsyncGenerator\<[Token](generated-doc/class.Token/README.md), `void`, `any`>
+> `function` [jstokStream](generated-doc/function.jstokStream/README.md)(source: ReadableStream\<Uint8Array> | [Reader](generated-doc/private.type.Reader/README.md), tabWidth: `number`=4, nLine: `number`=1, nColumn: `number`=1, decoder: TextDecoder=new TextDecoder, buffer: `number` | ArrayBuffer=BUFFER\_SIZE): AsyncGenerator\<[Token](generated-doc/class.Token/README.md), `void`, `any`>
 
 It will start counting lines and chars from the provided `nLine` and `nColumn` values. When counting chars, it will respect the desired `tabWidth`.
 
@@ -200,10 +200,10 @@ If `decoder` is provided, will use it to convert bytes to text.
 
 ```ts
 // To download and run this example:
-// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.0.1/README.md' | perl -ne '$y=$1 if /^```(.)?/;  print $_ if $y&&$m;  $m=$y&&($m||m~<example-ksv8>~)' > /tmp/example-ksv8.ts
+// curl 'https://raw.githubusercontent.com/jeremiah-shaulov/jstok/v2.1.1/README.md' | perl -ne 's/^> //; $y=$1 if /^```(.)?/; print $_ if $y&&$m; $m=$y&&$m+/<example-ksv8>/' > /tmp/example-ksv8.ts
 // deno run --allow-read /tmp/example-ksv8.ts
 
-import {jstokStream} from 'https://deno.land/x/jstok@v2.0.1/mod.ts';
+import {jstokStream} from 'https://deno.land/x/jstok@v2.1.1/mod.ts';
 
 const fh = await Deno.open(new URL(import.meta.url).pathname, {read: true});
 for await (const token of jstokStream(fh.readable))
