@@ -3,14 +3,17 @@ import {jstok, Token, TokenType} from "./jstok.ts";
 const BUFFER_SIZE = 16*1024;
 
 const EMPTY_BUFFER = new Uint8Array;
-const defaultDecoder = new TextDecoder;
+
+type Reader =
+{	read(p: Uint8Array): Promise<number | null>;
+};
 
 /**	Returns async iterator over JavaScript tokens found in source code.
 	This function doesn't generate `TokenType.MORE_REQUEST` tokens.
 	`nLine` and `nColumn` - will start counting lines from these initial values.
  **/
-export async function *jstokStream(source: ReadableStream<Uint8Array>, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token, void>
-{	using reader = new TextReader(source, decoder);
+export async function *jstokStream(source: ReadableStream<Uint8Array>|Reader, tabWidth=4, nLine=1, nColumn=1, decoder=new TextDecoder, buffer: number|ArrayBuffer=BUFFER_SIZE): AsyncGenerator<Token, void>
+{	using reader = 'getReader' in source ? new StrReaderFromStream(source, decoder, buffer) : new StrReaderFromReader(source, decoder, buffer);
 	const it = jstok(await reader.read(), tabWidth, nLine, nColumn);
 	let token;
 	while ((token = it.next().value))
@@ -27,8 +30,8 @@ export async function *jstokStream(source: ReadableStream<Uint8Array>, tabWidth=
 /**	Like `jstokStream()`, but buffers tokens in array, and yields this array periodically.
 	This is to avoid creating and awaiting Promises for each Token in the code.
  **/
-export async function *jstokStreamArray(source: ReadableStream<Uint8Array>, tabWidth=4, nLine=1, nColumn=1, decoder=defaultDecoder): AsyncGenerator<Token[], void>
-{	using reader = new TextReader(source, decoder);
+export async function *jstokStreamArray(source: ReadableStream<Uint8Array>|Reader, tabWidth=4, nLine=1, nColumn=1, decoder=new TextDecoder, buffer: number|ArrayBuffer=BUFFER_SIZE): AsyncGenerator<Token[], void>
+{	using reader = 'getReader' in source ? new StrReaderFromStream(source, decoder, buffer) : new StrReaderFromReader(source, decoder, buffer);
 	const it = jstok(await reader.read(), tabWidth, nLine, nColumn);
 	let tokensBuffer = new Array<Token>;
 	let token;
@@ -50,16 +53,16 @@ export async function *jstokStreamArray(source: ReadableStream<Uint8Array>, tabW
 	}
 }
 
-class TextReader
+class StrReaderFromStream
 {	#reader: ReadableStreamDefaultReader<Uint8Array>|undefined;
 	#readerByob: ReadableStreamBYOBReader|undefined;
-	#decoder: TextDecoder;
+	#decoder;
 	#buffer = EMPTY_BUFFER.buffer;
 
-	constructor(input: ReadableStream<Uint8Array>, decoder: TextDecoder)
+	constructor(input: ReadableStream<Uint8Array>, decoder: TextDecoder, buffer: number|ArrayBuffer)
 	{	try
 		{	this.#readerByob = input.getReader({mode: 'byob'});
-			this.#buffer = new ArrayBuffer(BUFFER_SIZE);
+			this.#buffer = buffer instanceof ArrayBuffer ? buffer : new ArrayBuffer(buffer);
 		}
 		catch
 		{	this.#reader = input.getReader();
@@ -101,5 +104,37 @@ class TextReader
 	{	this.#decoder.decode(EMPTY_BUFFER); // Clear state (deno requires it)
 		this.#reader?.releaseLock();
 		this.#readerByob?.releaseLock();
+	}
+}
+
+class StrReaderFromReader
+{	#reader;
+	#decoder;
+	#buffer;
+
+	constructor(reader: Reader, decoder: TextDecoder, buffer: number|ArrayBuffer)
+	{	this.#reader = reader;
+		this.#decoder = decoder;
+		this.#buffer = typeof(buffer)=='number' ? new Uint8Array(buffer) : new Uint8Array(buffer);
+	}
+
+	async read()
+	{	const reader = this.#reader;
+		const decoder = this.#decoder;
+		const buffer = this.#buffer;
+		while (true)
+		{	const n = await reader.read(buffer);
+			if (!n)
+			{	return '';
+			}
+			const text = decoder.decode(buffer.subarray(0, n), {stream: true});
+			if (text.length)
+			{	return text;
+			}
+		}
+	}
+
+	[Symbol.dispose]()
+	{	this.#decoder.decode(EMPTY_BUFFER); // Clear state (deno requires it)
 	}
 }

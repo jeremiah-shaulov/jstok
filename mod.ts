@@ -7,7 +7,7 @@
 	// deno run example.ts
 
 	import {jstok, TokenType} from './mod.ts';
-	import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';
+	import {assertEquals} from 'jsr:@std/assert@1.0.14/equals';
 
 	const source =
 	`	// Comment

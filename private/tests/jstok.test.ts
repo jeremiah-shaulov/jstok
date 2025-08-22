@@ -1,8 +1,8 @@
 import {jstok, jstokStream, Token, TokenType} from '../../mod.ts';
 import {jstokStreamArray} from '../jstok_stream.ts';
-import {assertEquals} from 'jsr:@std/assert@1.0.7/equals';
+import {assertEquals} from 'jsr:@std/assert@1.0.14/equals';
 
-function stringReader(str: string, isByob=false, chunkSize=10, encoding='utf-8')
+function stringReader(str: string, isByob: boolean|null=false, chunkSize=10, encoding='utf-8')
 {	let data: Uint8Array;
 	let pos = 0;
 
@@ -16,8 +16,23 @@ function stringReader(str: string, isByob=false, chunkSize=10, encoding='utf-8')
 	{	data = new TextEncoder().encode(str);
 	}
 
-	if (!isByob)
-	{	return new ReadableStream
+	if (isByob === null)
+	{	const reader =
+		{	// deno-lint-ignore require-await
+			async read(p: Uint8Array): Promise<number|null>
+			{	if (pos >= data.length)
+				{	return null;
+				}
+				const chunk = data.subarray(pos, pos+Math.min(chunkSize, data.length-pos));
+				p.set(chunk, 0);
+				pos += chunk.length;
+				return chunk.length;
+			}
+		};
+		return reader;
+	}
+	else if (!isByob)
+	{	return new ReadableStream<Uint8Array>
 		(	{	pull(controller)
 				{	const chunk = data.subarray(pos, pos+Math.min(chunkSize, data.length-pos));
 					pos += chunk.length;
@@ -141,7 +156,7 @@ Deno.test
 	{	for (const encoding of ['utf-8', 'utf-16le', 'utf-16be', 'windows-1252'])
 		{	for (let chunkSize=1; chunkSize<90; chunkSize++)
 			{	for (const isArray of [false, true])
-				{	for (const isByob of [false, true])
+				{	for (const isByob of [null, false, true])
 					{	const comment = encoding=='windows-1252' ? `/*A B\nC*/` : `/*Aф៘\n😀*/`;
 						const string = encoding=='windows-1252' ? '"A"' : '"😀"';
 						const source = stringReader(`${comment}Abc\r\n123\t45\t6\t7'\t8\t9'; \`\t012\t\${'345'}6\${7\n}\`; \`\`; /\t/; "L1\\\n\tL2"; ${string};`, isByob, chunkSize, encoding);
@@ -204,7 +219,7 @@ Deno.test
 Deno.test
 (	'Reader potential RegExp',
 	async () =>
-	{	for (const isByob of [false, true])
+	{	for (const isByob of [null, false, true])
 		{	const source = stringReader('/./;', isByob, 3);
 			const tokens = [];
 			for await (const token of jstokStream(source))
