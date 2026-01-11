@@ -3,7 +3,7 @@
 [Documentation Index](../README.md)
 
 ```ts
-import {Token} from "https://deno.land/x/jstok@v2.1.1/mod.ts"
+import {Token} from "https://deno.land/x/jstok@v3.0.0/mod.ts"
 ```
 
 Represents a JavaScript token.
