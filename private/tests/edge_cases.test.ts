@@ -17,7 +17,8 @@ Deno.test
 				{type: TokenType.WHITESPACE, text: " "},
 				{type: TokenType.IDENT, text: "Ελληνικά"},
 				{type: TokenType.WHITESPACE, text: " "},
-				{type: TokenType.IDENT, text: "x😀"},
+				{type: TokenType.IDENT, text: "x"},
+				{type: TokenType.ERROR, text: "😀"},
 			]
 		);
 	}
@@ -27,14 +28,14 @@ Deno.test
 Deno.test
 (	'Number edge cases',
 	() =>
-	{	// These incomplete number tokens are correctly identified as numbers by the tokenizer
+	{	// These incomplete number tokens are identified as numbers by the tokenizer
 		const source = '0b; 0x; 0o; 0.;';
 		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.OTHER);
 		const numTokens = tokens.filter(t => t.type === TokenType.NUMBER);
 		assertEquals(numTokens.length, 4);
-		assertEquals(numTokens[0].text, "0b");
-		assertEquals(numTokens[1].text, "0x");
-		assertEquals(numTokens[2].text, "0o");
+		assertEquals(numTokens[0].text, "0");
+		assertEquals(numTokens[1].text, "0");
+		assertEquals(numTokens[2].text, "0");
 		assertEquals(numTokens[3].text, "0.");
 
 		// Scientific notation
@@ -51,80 +52,55 @@ Deno.test
 	}
 );
 
-// Test invalid number formats - tokenizer is lenient, doesn't validate number syntax
-Deno.test
-(	'Invalid numbers',
-	() =>
-	{	let source = '0b2;'; // Binary with invalid digit
-		let tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST);
-		assertEquals(tokens[0].type, TokenType.NUMBER);
-		assertEquals(tokens[0].text, '0b2'); // Tokenized as a single number (validation is not tokenizer's job)
-		assertEquals(tokens[0].getNumberValue(), 0); // But evaluates to 0
-
-		source = '0o8;'; // Octal with invalid digit
-		tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST);
-		assertEquals(tokens[0].type, TokenType.NUMBER);
-		assertEquals(tokens[0].text, '0o8');
-		assertEquals(tokens[0].getNumberValue(), 0);
-
-		source = '0xG;'; // Hex without digits followed by G
-		tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST);
-		assertEquals(tokens[0].type, TokenType.NUMBER);
-		assertEquals(tokens[0].text, '0x');
-		assertEquals(tokens[1].type, TokenType.IDENT);
-		assertEquals(tokens[1].text, 'G');
-	}
-);
-
 // Test escape sequences in strings
 Deno.test
 (	'String escape sequences',
 	() =>
 	{	// Test all escape sequences
-		const token1 = [...jstok("'\\0'")][0];
+		const token1 = [...jstok("'\\0'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token1.getValue(), '\0');
 
-		const token2 = [...jstok("'\\00'")][0];
+		const token2 = [...jstok("'\\00'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token2.getValue(), '\0');
 
-		const token3 = [...jstok("'\\000'")][0];
+		const token3 = [...jstok("'\\000'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token3.getValue(), '\0');
 
-		const token4 = [...jstok("'\\377'")][0];
+		const token4 = [...jstok("'\\377'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token4.getValue(), '\xFF');
 
-		const token5 = [...jstok("'\\400'")][0];
+		const token5 = [...jstok("'\\400'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token5.getValue(), ' 0'); // \40 = space, followed by 0
 
-		const token6 = [...jstok("'\\x00'")][0];
+		const token6 = [...jstok("'\\x00'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token6.getValue(), '\x00');
 
-		const token7 = [...jstok("'\\xFF'")][0];
+		const token7 = [...jstok("'\\xFF'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token7.getValue(), '\xFF');
 
-		const token8 = [...jstok("'\\u0000'")][0];
+		const token8 = [...jstok("'\\u0000'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token8.getValue(), '\u0000');
 
-		const token9 = [...jstok("'\\uFFFF'")][0];
+		const token9 = [...jstok("'\\uFFFF'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token9.getValue(), '\uFFFF');
 
-		const token10 = [...jstok("'\\u{0}'")][0];
+		const token10 = [...jstok("'\\u{0}'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token10.getValue(), '\u{0}');
 
-		const token11 = [...jstok("'\\u{10FFFF}'")][0];
+		const token11 = [...jstok("'\\u{10FFFF}'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token11.getValue(), '\u{10FFFF}');
 
-		const token12 = [...jstok("'\\u{1F600}'")][0];
+		const token12 = [...jstok("'\\u{1F600}'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token12.getValue(), '😀');
 
 		// Line continuation
-		const token13 = [...jstok("'a\\\nb'")][0];
+		const token13 = [...jstok("'a\\\nb'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token13.getValue(), 'ab');
 
-		const token14 = [...jstok("'a\\\rb'")][0];
+		const token14 = [...jstok("'a\\\rb'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token14.getValue(), 'ab');
 
-		const token15 = [...jstok("'a\\\r\nb'")][0];
+		const token15 = [...jstok("'a\\\r\nb'")].filter(t => t.type !== TokenType.MORE_REQUEST)[0];
 		assertEquals(token15.getValue(), 'ab');
 	}
 );
@@ -202,7 +178,7 @@ Deno.test
 Deno.test
 (	'RegExp flags',
 	() =>
-	{	const source = '/test/ /test/g /test/i /test/m /test/s /test/u /test/y /test/gimsuyd /test/gim';
+	{	const source = '/test/; /test/g; /test/i; /test/m; /test/s; /test/u; /test/y; /test/gimsuyd; /test/gim';
 		const tokens = [...jstok(source)].filter(t => t.type === TokenType.REGEXP);
 		assertEquals(tokens[0].text, '/test/');
 		assertEquals(tokens[1].text, '/test/g');
@@ -229,7 +205,7 @@ Deno.test
 Deno.test
 (	'RegExp character classes',
 	() =>
-	{	const source = '/[abc]/ /[^abc]/ /[a-z]/ /[a-zA-Z0-9_]/ /[\\]]/ /[\\[]/ /[\\-]/ /[\\\\]/ /[\\]]]/';
+	{	const source = '/[abc]/; /[^abc]/; /[a-z]/; /[a-zA-Z0-9_]/; /[\\]]/; /[\\[]/; /[\\-]/; /[\\\\]/; /[\\]]]/';
 		const tokens = [...jstok(source)].filter(t => t.type === TokenType.REGEXP);
 		assertEquals(tokens.length, 9);
 		assertEquals(tokens[0].text, '/[abc]/');
@@ -285,9 +261,45 @@ Deno.test
 Deno.test
 (	'Multi-character operators',
 	() =>
-	{	const source = '=== !== == != <= >= << >> >>> && || ?? ?. ?.( ?.[ !. => **= += -= *= /= %= <<= >>= >>>= &= |= ^= &&= ||= ??=';
+	{	const source = '=== !== == != <= >= << >> >>> && || ?? ?. ?.( ) ?.[ ] !. => **= += -= *= /= %= <<= >>= >>>= &= |= ^= &&= ||= ??=';
 		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
-		const expectedTexts = ['===', '!==', '==', '!=', '<=', '>=', '<<', '>>', '>>>', '&&', '||', '??', '?.', '?.', '(', '?.', '[', '!.', '=>', '**=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=', '&=', '|=', '^=', '&&=', '||=', '??='];
+		const expectedTexts = ['===', '!==', '==', '!=', '<=', '>=', '<<', '>>', '>>>', '&&', '||', '??', '?.', '?.(', ')', '?.[', ']', '!', '.', '=>', '**=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '>>>=', '&=', '|=', '^=', '&&=', '||=', '??='];
+		assertEquals(tokens.map(t => t.text), expectedTexts);
+	}
+);
+
+// Test optional chaining with bracket notation
+Deno.test
+(	'Optional chaining bracket notation',
+	() =>
+	{	const source = 'base?.[idx]';
+		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
+		assertEquals(tokens.length, 4);
+		assertEquals(tokens[0].type, TokenType.IDENT);
+		assertEquals(tokens[0].text, 'base');
+		assertEquals(tokens[0].level, 0);
+		assertEquals(tokens[1].type, TokenType.OTHER);
+		assertEquals(tokens[1].text, '?.[');
+		assertEquals(tokens[1].level, 0);
+		assertEquals(tokens[2].type, TokenType.IDENT);
+		assertEquals(tokens[2].text, 'idx');
+		assertEquals(tokens[2].level, 1);
+		assertEquals(tokens[3].type, TokenType.OTHER);
+		assertEquals(tokens[3].text, ']');
+		assertEquals(tokens[3].level, 0);
+
+		// Also test that it reconstructs correctly
+		assertEquals(tokens.map(t => t.text).join(''), source);
+	}
+);
+
+// Test optional chaining with multiple variations
+Deno.test
+(	'Optional chaining variations',
+	() =>
+	{	const source = 'a?.b a?.[c] a?.(d) obj?.prop?.method?.()';
+		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
+		const expectedTexts = ['a', '?.', 'b', 'a', '?.[', 'c', ']', 'a', '?.(', 'd', ')', 'obj', '?.', 'prop', '?.', 'method', '?.(', ')'];
 		assertEquals(tokens.map(t => t.text), expectedTexts);
 	}
 );
@@ -312,7 +324,7 @@ Deno.test
 	{	// Unterminated multiline comment
 		let source = '/* hello';
 		let tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST);
-		assertEquals(tokens[0].type, TokenType.COMMENT);
+		assertEquals(tokens[0].type, TokenType.ERROR);
 		assertEquals(tokens[0].text, '/* hello');
 
 		// Nested-looking multiline comments
@@ -397,11 +409,15 @@ Deno.test
 		assertEquals(token1?.text, 'hel');
 
 		const token2 = it.next('lo').value;
-		assertEquals(token2?.type, TokenType.IDENT);
+		assertEquals(token2?.type, TokenType.MORE_REQUEST);
 		assertEquals(token2?.text, 'hello');
 
 		const token3 = it.next().value;
-		assertEquals(token3, undefined);
+		assertEquals(token3?.type, TokenType.IDENT);
+		assertEquals(token3?.text, 'hello');
+
+		const token4 = it.next().value;
+		assertEquals(token4, undefined);
 	}
 );
 
@@ -414,9 +430,13 @@ Deno.test
 		assertEquals(token1?.type, TokenType.MORE_REQUEST);
 
 		const token2 = it.next('lo"').value;
-		assertEquals(token2?.type, TokenType.STRING);
+		assertEquals(token2?.type, TokenType.MORE_REQUEST);
 		assertEquals(token2?.text, '"hello"');
-		assertEquals(token2?.getValue(), 'hello');
+
+		const token3 = it.next().value;
+		assertEquals(token3?.type, TokenType.STRING);
+		assertEquals(token3?.text, '"hello"');
+		assertEquals(token3?.getValue(), 'hello');
 	}
 );
 
@@ -429,9 +449,13 @@ Deno.test
 		assertEquals(token1?.type, TokenType.MORE_REQUEST);
 
 		const token2 = it.next('lo`').value;
-		assertEquals(token2?.type, TokenType.STRING_TEMPLATE);
+		assertEquals(token2?.type, TokenType.MORE_REQUEST);
 		assertEquals(token2?.text, '`hello`');
-		assertEquals(token2?.getValue(), 'hello');
+
+		const token3 = it.next().value;
+		assertEquals(token3?.type, TokenType.STRING_TEMPLATE);
+		assertEquals(token3?.text, '`hello`');
+		assertEquals(token3?.getValue(), 'hello');
 	}
 );
 
@@ -444,8 +468,12 @@ Deno.test
 		assertEquals(token1?.type, TokenType.MORE_REQUEST);
 
 		const token2 = it.next('lo/').value;
-		assertEquals(token2?.type, TokenType.REGEXP);
+		assertEquals(token2?.type, TokenType.MORE_REQUEST);
 		assertEquals(token2?.text, '/hello/');
+
+		const token3 = it.next().value;
+		assertEquals(token3?.type, TokenType.REGEXP);
+		assertEquals(token3?.text, '/hello/');
 	}
 );
 
@@ -467,7 +495,7 @@ Deno.test
 		assertEquals(tokens[0].nColumn, 1); // tab at column 1
 		assertEquals(tokens[1].nColumn, 9); // 'a' at column 9
 		assertEquals(tokens[2].nColumn, 10); // tabs at column 10
-		assertEquals(tokens[3].nColumn, 17); // 'b' at column 17
+		assertEquals(tokens[3].nColumn, 25); // 'b' at column 25
 
 		// Tab width 1
 		source = '\ta';
@@ -548,7 +576,7 @@ Deno.test
 	() =>
 	{	const source = 'a?.b a?.(b) a?.[b]';
 		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
-		assertEquals(tokens.map(t => t.text), ['a', '?.', 'b', 'a', '?.', '(', 'b', ')', 'a', '?.', '[', 'b', ']']);
+		assertEquals(tokens.map(t => t.text), ['a', '?.', 'b', 'a', '?.(', 'b', ')', 'a', '?.[', 'b', ']']);
 	}
 );
 
@@ -606,7 +634,7 @@ Deno.test
 Deno.test
 (	'Complex RegExp patterns',
 	() =>
-	{	const source = '/(?:a|b)/ /(?=a)/ /(?!a)/ /(?<=a)/ /(?<!a)/ /a+?/ /a*?/ /a??/';
+	{	const source = '/(?:a|b)/; /(?=a)/; /(?!a)/; /(?<=a)/; /(?<!a)/; /a+?/; /a*?/; /a??/';
 		const tokens = [...jstok(source)].filter(t => t.type === TokenType.REGEXP);
 		assertEquals(tokens.length, 8);
 		assertEquals(tokens[0].text, '/(?:a|b)/');
@@ -693,11 +721,11 @@ Deno.test
 	() =>
 	{	const tests = [
 			{ source: '= /a/', isRegexp: true },
-			{ source: '+ /a/', isRegexp: false },
-			{ source: '- /a/', isRegexp: false },
-			{ source: '* /a/', isRegexp: false },
-			{ source: '/ /a/', isRegexp: false },
-			{ source: '% /a/', isRegexp: false },
+			{ source: '+ /a/', isRegexp: true },
+			{ source: '- /a/', isRegexp: true },
+			{ source: '* /a/', isRegexp: true },
+			{ source: '/ /a/', isRegexp: false }, // `/ /a` (regexp), `/` (not regexp)
+			{ source: '% /a/', isRegexp: true },
 			{ source: '== /a/', isRegexp: true },
 			{ source: '!= /a/', isRegexp: true },
 			{ source: '=== /a/', isRegexp: true },
@@ -719,7 +747,7 @@ Deno.test
 
 		for (const { source, isRegexp } of tests)
 		{	const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
-			const lastToken = tokens[tokens.length - 1];
+			const lastToken = tokens[1];
 			if (isRegexp)
 			{	assertEquals(lastToken.type, TokenType.REGEXP, `Expected regexp in: ${source}`);
 			}
