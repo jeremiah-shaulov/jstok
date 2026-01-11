@@ -14,6 +14,7 @@ const C_MINUS = '-'.charCodeAt(0);
 const C_TIMES = '*'.charCodeAt(0);
 const C_SLASH = '/'.charCodeAt(0);
 const C_BACKSLASH = '\\'.charCodeAt(0);
+const C_QEST = '?'.charCodeAt(0);
 const C_CR = '\r'.charCodeAt(0);
 const C_LF = '\n'.charCodeAt(0);
 const C_TAB = '\t'.charCodeAt(0);
@@ -79,7 +80,7 @@ const RE_TOKENIZER_STR = String.raw
 	' [^'\\\r\n]* (?:\\(?:\r\n|.|$) [^'\\\r\n]*)* (?:'|$)  |
 	" [^"\\\r\n]* (?:\\(?:\r\n|.|$) [^"\\\r\n]*)* (?:"|$)  |
 	${'`'}  ${RE_STRING_TEMPLATE_STR}  |
-	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?!][.] | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | => | ={1,3} | !=?=? | [.](?:[.][.])?
+	\*{1,2}=? | <{1,2}=? | >{1,3}=? | &{1,2}=? | [|]{1,2}=? | [?][.](?:\(|\[)? | [?]{1,2}=? | [+\-/%<>^]= | \+{1,2} | -{1,2} | => | ={1,3} | !=?=? | [.](?:[.][.])?
 `;
 const RE_TOKENIZER = new RegExp((RE_TOKENIZER_STR + '|.').replace(/\s+/g, ''), 'suy');
 
@@ -528,6 +529,29 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 				nColumn++;
 				continue;
 			}
+
+			case C_QEST:
+				if (source.charCodeAt(lastIndex+1) == C_DOT)
+				{	const c = source.charCodeAt(lastIndex+2);
+					if (c==C_PAREN_OPEN || c==C_SQUARE_OPEN)
+					{	const text = c==C_PAREN_OPEN ? '?.(' : '?.[';
+						// MORE_REQUEST?
+						lastIndex += 3;
+						if (lastIndex == source.length)
+						{	const more = yield new Token(text, TokenType.MORE_REQUEST, nLine, nColumn, level);
+							if (typeof(more)=='string' && more.length)
+							{	lastIndex = 0;
+								source = '(' + more;
+								continue;
+							}
+						}
+						yield new Token(text, TokenType.OTHER, nLine, nColumn, level);
+						structure[level++] = c==C_PAREN_OPEN ? Structure.PAREN : Structure.SQUARE;
+						regExpExpected = true;
+						nColumn++;
+						continue;
+					}
+				}
 		}
 
 		re.lastIndex = lastIndex;
