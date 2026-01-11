@@ -321,8 +321,11 @@ export class Token
 											if (c0<C_ZERO || c0>C_SEVEN)
 											{	break;
 											}
-											c <<= 3;
-											c |= c0 - C_ZERO;
+											const d = (c << 3) | (c0 - C_ZERO);
+											if (d >= 256)
+											{	break;
+											}
+											c = d;
 										}
 										i--;
 									}
