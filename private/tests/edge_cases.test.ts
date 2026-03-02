@@ -857,3 +857,14 @@ Deno.test
 		}
 	}
 );
+
+// Test getRegExpValue for non-regexp tokens
+Deno.test
+(	'Escape sequences in identifiers',
+	() =>
+	{	const tokens = [...jstok('\\u0061bc\n')].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
+		assertEquals(tokens.length, 1);
+		assertEquals(tokens[0].type, TokenType.IDENT);
+		assertEquals(tokens[0].getValue(), 'abc');
+	}
+);

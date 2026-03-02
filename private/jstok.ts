@@ -55,6 +55,7 @@ const C_Z_CAP = 'Z'.charCodeAt(0);
 
 const DEFAULT_REGEXP = /(?:)/;
 const RE_LINE = /[\r\n]/;
+const RE_VALID_IDENT = /^[\p{Letter}\p{Number}_$]+$/u;
 
 const PADDER = '                                ';
 
@@ -66,7 +67,7 @@ const RE_STRING_TEMPLATE = new RegExp(RE_STRING_TEMPLATE_STR.replace(/\s+/g, '')
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
 	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
-	[@#]? ([_$] | \p{Letter})  (?:[_$] | \p{Number} | \p{Letter})*  |
+	[@#]? ([_$] | \p{Letter} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})  (?:[_$] | \p{Number} | \p{Letter} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})*  |
 	(	0
 		(?:	[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
 			[Oo] (?:[0-7_]+|$)  n?  |
@@ -221,6 +222,9 @@ export class Token
 		{	case TokenType.COMMENT:
 			{	return text.charCodeAt(1)==C_SLASH ? text.slice(2) : text.slice(2, -2);
 			}
+			case TokenType.IDENT:
+			{	return !text.includes('\\') ? text : unescapeIdent(text);
+			}
 			case TokenType.STRING: // '...', "..."
 			case TokenType.STRING_TEMPLATE: // `...`
 			case TokenType.STRING_TEMPLATE_BEGIN: // `...${
@@ -276,36 +280,8 @@ export class Token
 										break;
 									}
 									case C_U:
-									{	let c3 = text.charCodeAt(++i);
-										if (c3 != C_BRACE_OPEN)
-										{	let c2 = text.charCodeAt(++i);
-											let c1 = text.charCodeAt(++i);
-											let c0 = text.charCodeAt(++i);
-											c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
-											c2 -= c2>=C_ZERO && c2<=C_NINE ? C_ZERO : c2>=C_A_CAP && c2<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
-											c1 -= c1>=C_ZERO && c1<=C_NINE ? C_ZERO : c1>=C_A_CAP && c1<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
-											c0 -= c0>=C_ZERO && c0<=C_NINE ? C_ZERO : c0>=C_A_CAP && c0<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
-											c = (c3 << 12) | (c2 << 8) | (c1 << 4) | c0;
-										}
-										else
-										{	c = 0;
-											while (++i < iEnd)
-											{	c3 = text.charCodeAt(i);
-												if (c3 == C_BRACE_CLOSE)
-												{	break;
-												}
-												c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
-												c <<= 4;
-												c |= c3;
-											}
-											if (c >= 0x10000)
-											{	c -= 0x10000;
-												c3 = 0xD800 | (c >> 10) & 0x3FF; // high surrogate
-												c = 0xDC00 | c & 0x3FF; // low surrogate
-												buffer[j++] = c3;
-											}
-										}
-										break;
+									{	({i, j} = readUnicodeEscape(text, i, buffer, j));
+										continue;
 									}
 									case C_ZERO:
 									case C_ONE:
@@ -389,6 +365,57 @@ export class Token
 
 function pad(str: string, width: number)
 {	return str + PADDER.substring(0, width-str.length);
+}
+
+function readUnicodeEscape(text: string, i: number, buffer: Uint16Array, j: number)
+{	let c3 = text.charCodeAt(++i); // skip 'u'
+	if (c3 != C_BRACE_OPEN)
+	{	let c2 = text.charCodeAt(++i);
+		let c1 = text.charCodeAt(++i);
+		let c0 = text.charCodeAt(++i);
+		c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+		c2 -= c2>=C_ZERO && c2<=C_NINE ? C_ZERO : c2>=C_A_CAP && c2<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+		c1 -= c1>=C_ZERO && c1<=C_NINE ? C_ZERO : c1>=C_A_CAP && c1<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+		c0 -= c0>=C_ZERO && c0<=C_NINE ? C_ZERO : c0>=C_A_CAP && c0<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+		c0 = (c3 << 12) | (c2 << 8) | (c1 << 4) | c0;
+		buffer[j++] = c0;
+	}
+	else
+	{	let c = 0;
+		const iEnd = text.length;
+		while (++i < iEnd)
+		{	c3 = text.charCodeAt(i);
+			if (c3 == C_BRACE_CLOSE)
+			{	break;
+			}
+			c3 -= c3>=C_ZERO && c3<=C_NINE ? C_ZERO : c3>=C_A_CAP && c3<=C_Z_CAP ? C_A_CAP-10 : C_A-10;
+			c <<= 4;
+			c |= c3;
+		}
+		if (c >= 0x10000)
+		{	c -= 0x10000;
+			c3 = 0xD800 | (c >> 10) & 0x3FF; // high surrogate
+			c = 0xDC00 | c & 0x3FF; // low surrogate
+			buffer[j++] = c3;
+		}
+		buffer[j++] = c;
+	}
+	return {i, j};
+}
+
+function unescapeIdent(text: string)
+{	const buffer = new Uint16Array(text.length-4); // assume: text contains one unicode escape sequence \uXXXX or \u{X}
+	let j = 0;
+	for (let i=0; i<text.length; i++)
+	{	const c = text.charCodeAt(i);
+		if (c == C_BACKSLASH)
+		{	({i, j} = readUnicodeEscape(text, i+1, buffer, j));
+		}
+		else
+		{	buffer[j++] = c;
+		}
+	}
+	return decoder16.decode(buffer.subarray(0, j));
 }
 
 /**	Returns iterator over JavaScript tokens found in source code.
@@ -582,8 +609,16 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 
 		// ident?
 		if (isIdent)
-		{	yield new Token(text, c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, nLine, nColumn, level);
-			regExpExpected = text=='return' || text=='yield';
+		{	// validate that the decoded codepoint is a valid identifier character
+			const pos = text.indexOf('\\');
+			if (pos!=-1 && !RE_VALID_IDENT.test(unescapeIdent(text).slice(pos)))
+			{	yield new Token(text, TokenType.ERROR, nLine, nColumn, level);
+				regExpExpected = false;
+			}
+			else
+			{	yield new Token(text, c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, nLine, nColumn, level);
+				regExpExpected = text=='return' || text=='yield';
+			}
 			// advance nColumn and nLine
 			nColumn += text.length;
 			continue;
