@@ -28,15 +28,14 @@ Deno.test
 Deno.test
 (	'Number edge cases',
 	() =>
-	{	// These incomplete number tokens are identified as numbers by the tokenizer
+	{	// Incomplete number tokens are errors
 		const source = '0b; 0x; 0o; 0.;';
 		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.OTHER);
-		const numTokens = tokens.filter(t => t.type === TokenType.NUMBER);
-		assertEquals(numTokens.length, 4);
-		assertEquals(numTokens[0].text, "0");
-		assertEquals(numTokens[1].text, "0");
-		assertEquals(numTokens[2].text, "0");
-		assertEquals(numTokens[3].text, "0.");
+		const errTokens = tokens.filter(t => t.type === TokenType.ERROR);
+		assertEquals(errTokens.length, 3);
+		assertEquals(errTokens[0].text, "0");
+		assertEquals(errTokens[1].text, "0");
+		assertEquals(errTokens[2].text, "0");
 
 		// Scientific notation
 		const source2 = '0e1 0E1 0.e1 .1e1 1e1 1.e1 9_9_9n 0xFFFFFFFFFFFFFFFFn';

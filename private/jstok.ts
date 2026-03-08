@@ -7,6 +7,7 @@ const C_APOS = "'".charCodeAt(0);
 const C_QUOT = '"'.charCodeAt(0);
 const C_BACKTICK = '`'.charCodeAt(0);
 const C_AT = '@'.charCodeAt(0);
+const C_UNDERSCORE = '_'.charCodeAt(0);
 const C_EQ = '='.charCodeAt(0);
 const C_DOT = '.'.charCodeAt(0);
 const C_PLUS = '+'.charCodeAt(0);
@@ -38,6 +39,7 @@ const C_SEVEN = '7'.charCodeAt(0);
 const C_NINE = '9'.charCodeAt(0);
 const C_A = 'a'.charCodeAt(0);
 const C_B = 'b'.charCodeAt(0);
+const C_E = 'e'.charCodeAt(0);
 const C_F = 'f'.charCodeAt(0);
 const C_N = 'n'.charCodeAt(0);
 const C_O = 'o'.charCodeAt(0);
@@ -56,6 +58,7 @@ const C_Z_CAP = 'Z'.charCodeAt(0);
 const DEFAULT_REGEXP = /(?:)/;
 const RE_LINE = /[\r\n]/;
 const RE_VALID_IDENT = /^[\p{ID_Start}_$][\p{ID_Continue}$]*$/u;
+const RE_VALID_IDENT_START_OR_BACKSLASH = /^[\p{ID_Start}_$\\]/u;
 
 const PADDER = '                                ';
 
@@ -418,6 +421,66 @@ function unescapeIdent(text: string)
 	return decoder16.decode(buffer.subarray(0, j));
 }
 
+function validateNumber(text: string, nextChar: string)
+{	// Validate numeric separators (underscores) according to the rules in https://tc39.es/ecma262/#sec-numeric-literals-numeric-separators
+	const underscorePos = text.indexOf('_');
+	if (underscorePos != -1)
+	{	// Numeric separators are not allowed in legacy octal/non-octal decimal literals (e.g., 0_1, 09_0, 00_0)
+		const secondLc = text.charCodeAt(1) | 0x20; // lowercase
+		if (text.charCodeAt(0) == C_ZERO) // starts with '0'; assume: we have '0' and underscore, so `text.length>1`
+		{	if (secondLc!=C_X && secondLc!=C_O && secondLc!=C_B && secondLc!=C_DOT && secondLc!=C_E)
+			{	// Legacy octal or non-octal decimal — separators not allowed
+				return TokenType.ERROR;
+			}
+		}
+		const isHex = secondLc == C_X;
+		let prev = text.charCodeAt(underscorePos - 1); // assume: underscorePos > 0, otherwise regex wouldn't match
+		for (let i=underscorePos; i<text.length; i++)
+		{	const c = text.charCodeAt(i);
+			if (c == C_UNDERSCORE)
+			{	const next = i < text.length-1 ? text.charCodeAt(i + 1) : 0;
+				// _ must be between two digits (0-9 or a-f/A-F for hex)
+				// _ cannot be adjacent to: _, ., e, E, x, X, o, O, b, B, n, +, -, or at start/end
+				if
+				(	next == C_UNDERSCORE ||
+					next == 0 ||
+					prev == C_DOT || next == C_DOT ||
+					prev == C_N || next == C_N ||
+					prev == C_PLUS ||
+					prev == C_MINUS
+				)
+				{	return TokenType.ERROR;
+				}
+				// Check for prefix letters and exponent markers
+				const prevLower = prev | 0x20; // lowercase
+				const nextLower = next | 0x20;
+				if (i == 2 && (prevLower == C_X || prevLower == C_O || prevLower == C_B))
+				{	return TokenType.ERROR;
+				}
+				// e/E is an exponent marker in decimal, but a digit in hex
+				if (!isHex && (prevLower == C_E || nextLower == C_E))
+				{	return TokenType.ERROR;
+				}
+			}
+			prev = c;
+		}
+	}
+	// Check for identifier start immediately after numeric literal (e.g., 3in is SyntaxError)
+	if (nextChar && RE_VALID_IDENT_START_OR_BACKSLASH.test(nextChar))
+	{	return TokenType.ERROR;
+	}
+	if (text.charCodeAt(text.length-1) == C_N)
+	{	// BigInt: reject legacy octal (07n) and non-octal decimal (09n)
+		if (text.length > 2 && text.charCodeAt(0) == C_ZERO)
+		{	const second = text.charCodeAt(1) | 0x20;
+			if (second != C_X && second != C_O && second != C_B)
+			{	return TokenType.ERROR;
+			}
+		}
+	}
+	return TokenType.NUMBER;
+}
+
 /**	Returns iterator over JavaScript tokens found in source code.
 	`nLine` and `nColumn` - will start counting lines from these initial values.
  **/
@@ -607,7 +670,8 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 
 		// number?
 		if (isNumber)
-		{	yield new Token(text, TokenType.NUMBER, nLine, nColumn, level);
+		{	const tokenType = validateNumber(text, source.charAt(lastIndex));
+			yield new Token(text, tokenType, nLine, nColumn, level);
 			regExpExpected = false;
 			// advance nColumn and nLine
 			nColumn += text.length;
