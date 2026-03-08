@@ -73,7 +73,7 @@ const RE_TOKENIZER_STR = String.raw
 			[Oo] (?:[0-7_]+|$)  n?  |
 			[Bb] (?:[01_]+|$)  n?  |
 			\.  [0-9_]*  (?: [Ee] [+\-]? [0-9_]+ )?  |
-			[0-9_]*  n?
+			[0-9_]*  (?: n | (?: [Ee] [+\-]? [0-9_]+ )? )
 		)  |
 		[1-9] [0-9_]*  (?:n  |  (?:\. [0-9_]*)?  (?: [Ee] [+\-]? [0-9_]+ )? )?  |
 		                      \. [0-9][0-9_]*    (?: [Ee] [+\-]? [0-9_]+ )?
@@ -341,7 +341,7 @@ export class Token
 			if (text.charCodeAt(0) == C_ZERO)
 			{	const c1 = text.charCodeAt(1);
 				if (c1!=C_DOT && c1!=C_X && c1!=C_X_CAP && c1!=C_O && c1!=C_O_CAP && c1!=C_B && c1!=C_B_CAP)
-				{	if (text.indexOf('8')==-1 && text.indexOf('9')==-1)
+				{	if (text.indexOf('8')==-1 && text.indexOf('9')==-1 && text.indexOf('e')==-1 && text.indexOf('E')==-1)
 					{	text = '0o'+text;
 					}
 				}
