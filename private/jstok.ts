@@ -568,7 +568,7 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						{	const more = yield new Token(text, TokenType.MORE_REQUEST, nLine, nColumn, level);
 							if (typeof(more)=='string' && more.length)
 							{	lastIndex = 0;
-								source = '(' + more;
+								source = text + more;
 								continue;
 							}
 						}
