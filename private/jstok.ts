@@ -55,7 +55,7 @@ const C_Z_CAP = 'Z'.charCodeAt(0);
 
 const DEFAULT_REGEXP = /(?:)/;
 const RE_LINE = /[\r\n]/;
-const RE_VALID_IDENT = /^[\p{Letter}\p{Number}_$]+$/u;
+const RE_VALID_IDENT = /^[\p{ID_Continue}_$]+$/u;
 
 const PADDER = '                                ';
 
@@ -67,7 +67,7 @@ const RE_STRING_TEMPLATE = new RegExp(RE_STRING_TEMPLATE_STR.replace(/\s+/g, '')
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
 	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
-	[@#]? ([_$] | \p{Letter} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})  (?:[_$] | \p{Number} | \p{Letter} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})*  |
+	[@#]? ([_$] | \p{ID_Start} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})  (?:[_$] | \p{ID_Continue} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})*  |
 	(	0
 		(?:	[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
 			[Oo] (?:[0-7_]+|$)  n?  |
