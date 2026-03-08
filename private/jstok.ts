@@ -687,7 +687,25 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 			}
 			else
 			{	yield new Token(text, c==C_AT ? TokenType.ATTRIBUTE : TokenType.IDENT, nLine, nColumn, level);
-				regExpExpected = text=='return' || text=='yield';
+				switch (text)
+				{	case 'return':
+					case 'yield':
+					case 'await':
+					case 'typeof':
+					case 'void':
+					case 'delete':
+					case 'throw':
+					case 'new':
+					case 'case':
+					case 'in':
+					case 'instanceof':
+					case 'of':
+					case 'else':
+						regExpExpected = true;
+						break;
+					default:
+						regExpExpected = false;
+				}
 			}
 			// advance nColumn and nLine
 			nColumn += text.length;
