@@ -69,7 +69,7 @@ const RE_STRING_TEMPLATE_STR = String.raw
 const RE_STRING_TEMPLATE = new RegExp(RE_STRING_TEMPLATE_STR.replace(/\s+/g, ''), 'suy');
 const RE_TOKENIZER_STR = String.raw
 `	(\p{White_Space}) \p{White_Space}*  |
-	/ (?: / [^\r\n]* | \* .*? (?:\*/|$) )  |
+	/ (?: / [^\r\n\u2028\u2029]* | \* .*? (?:\*/|$) )  |
 	[@#]? ([_$] | \p{ID_Start} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})  (?:[$] | \p{ID_Continue} | \\u[0-9A-Fa-f]{4} | \\u\{[0-9A-Fa-f]+\})*  |
 	(	0
 		(?:	[Xx] (?:[0-9A-Fa-f_]+|$)  n?  |
