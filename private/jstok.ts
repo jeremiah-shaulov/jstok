@@ -815,8 +815,12 @@ L:						for (; i<iEnd; i++)
 									regExpFound = parenLevel==0;
 									break L;
 								case C_BACKSLASH:
-									i++;
+								{	const escaped = source.charCodeAt(++i);
+									if (escaped === C_CR || escaped === C_LF || escaped === 0x2028 || escaped === 0x2029)
+									{	break L; // backslash-newline not allowed in regexp
+									}
 									break;
+								}
 								case C_PAREN_OPEN:
 									parenLevel++;
 									break;
