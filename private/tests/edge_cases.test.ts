@@ -580,6 +580,16 @@ Deno.test
 	}
 );
 
+// Test ?. followed by a digit is NOT optional chaining - it's ternary ? then .NNN number
+Deno.test
+(	'Not optional chaining',
+	() =>
+	{	const source = 'true?.0:1';
+		const tokens = [...jstok(source)].filter(t => t.type !== TokenType.MORE_REQUEST && t.type !== TokenType.WHITESPACE);
+		assertEquals(tokens.map(t => t.text), ['true', '?', '.0', ':', '1']);
+	}
+);
+
 // Test nullish coalescing
 Deno.test
 (	'Nullish coalescing',

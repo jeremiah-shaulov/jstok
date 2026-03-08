@@ -578,6 +578,13 @@ export function *jstok(source: string, tabWidth=4, nLine=1, nColumn=1): Generato
 						nColumn++;
 						continue;
 					}
+					else if (c>=C_ZERO && c<=C_NINE)
+					{	lastIndex++;
+						yield new Token('?', TokenType.OTHER, nLine, nColumn, level);
+						regExpExpected = true;
+						nColumn++;
+						continue;
+					}
 				}
 		}
 
